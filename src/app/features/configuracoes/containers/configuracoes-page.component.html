@@ -1,0 +1,77 @@
+<section class="space-y-4">
+  <app-page-header title="Configuracoes da escola" />
+
+  <p-card>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-2">
+      <label class="flex flex-col gap-1 text-sm md:col-span-2">
+        Nome da escola
+        <input pInputText type="text" formControlName="nomeEscola" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Divisao das notas
+        <p-select
+          formControlName="periodizacaoNotas"
+          [options]="periodizacaoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Nota maxima
+        <input pInputText type="number" min="1" step="0.1" formControlName="notaMaxima" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Media de aprovacao
+        <input pInputText type="number" min="0" step="0.1" formControlName="mediaAprovacao" />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Usa recuperacao
+        <p-select
+          formControlName="usaRecuperacao"
+          [options]="simNaoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Permitir lancamento manual de nota
+        <p-select
+          formControlName="permiteLancamentoManual"
+          [options]="simNaoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Mostrar ranking por turma
+        <p-select
+          formControlName="mostrarRankingTurma"
+          [options]="simNaoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <div class="md:col-span-2">
+        <app-form-actions [loading]="facade.loading()" [showCancel]="false" />
+      </div>
+    </form>
+  </p-card>
+
+  <p-card>
+    <h3 class="mb-3 text-lg font-medium">Sugestoes de configuracao</h3>
+    <ul class="list-disc space-y-2 pl-5 text-sm text-surface-700">
+      @for (item of suggestions; track item) {
+        <li>{{ item }}</li>
+      }
+    </ul>
+  </p-card>
+</section>

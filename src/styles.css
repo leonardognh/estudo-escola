@@ -1,0 +1,91 @@
+/* You can add global styles to this file, and also import other style files */
+
+@import 'tailwindcss';
+@import 'tailwindcss-primeui';
+@import 'primeicons/primeicons.css';
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--p-surface-50);
+  color: var(--p-text-color);
+  overflow-x: hidden;
+}
+
+.app-dark body {
+  background: var(--p-surface-950);
+  color: var(--p-text-color);
+}
+
+.app-shell-bg {
+  background: var(--p-surface-100);
+}
+
+.app-panel-bg {
+  background: var(--p-surface-0);
+}
+
+.app-panel-border {
+  border-color: var(--p-surface-200);
+}
+
+.app-dark .app-shell-bg {
+  background: var(--p-surface-950);
+}
+
+.app-dark .app-panel-bg {
+  background: var(--p-surface-900);
+}
+
+.app-dark .app-panel-border {
+  border-color: var(--p-surface-700);
+}
+
+/* PrimeNG table visual hierarchy (global) */
+.p-datatable {
+  border: 1px solid var(--p-surface-200);
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: var(--p-surface-0);
+}
+
+.p-datatable .p-datatable-header,
+.p-datatable .p-datatable-paginator-bottom {
+  background: var(--p-surface-50);
+}
+
+.p-datatable .p-datatable-thead > tr > th {
+  background: var(--p-surface-100);
+  border-bottom: 1px solid var(--p-surface-300);
+}
+
+.p-datatable .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid var(--p-surface-200);
+}
+
+.p-datatable .p-datatable-tbody > tr:last-child > td {
+  border-bottom: none;
+}
+
+.app-dark .p-datatable {
+  border-color: var(--p-surface-700);
+  background: var(--p-surface-900);
+}
+
+.app-dark .p-datatable .p-datatable-header,
+.app-dark .p-datatable .p-datatable-paginator-bottom {
+  background: var(--p-surface-900);
+}
+
+.app-dark .p-datatable .p-datatable-thead > tr > th {
+  background: var(--p-surface-800);
+  border-bottom-color: var(--p-surface-700);
+}
+
+.app-dark .p-datatable .p-datatable-tbody > tr > td {
+  border-bottom-color: var(--p-surface-700);
+}

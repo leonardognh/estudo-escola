@@ -1,0 +1,79 @@
+<section class="space-y-4">
+  <p-confirmdialog />
+  <app-page-header title="Cadastro de Periodos" actionLabel="Novo periodo" (action)="openCreateModal()" />
+
+  <p-card>
+    <h3 class="mb-3 text-lg font-medium">Periodos cadastrados</h3>
+    <p-table
+      #dtPeriodos
+      [value]="facade.periodos()"
+      [paginator]="true"
+      [rows]="8"
+      [globalFilterFields]="['nome', 'horaInicio', 'horaFim']"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="caption">
+        <app-table-search
+          placeholder="Pesquisar periodo"
+          (searchChange)="dtPeriodos.filterGlobal($event, 'contains')"
+        />
+      </ng-template>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Nome</th>
+          <th>Inicio</th>
+          <th>Fim</th>
+          <th class="w-36">Acoes</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-periodo>
+        <tr>
+          <td>{{ periodo.nome }}</td>
+          <td>{{ periodo.horaInicio }}</td>
+          <td>{{ periodo.horaFim }}</td>
+          <td>
+            <div class="flex gap-2">
+              <button pButton type="button" severity="secondary" (click)="startEdit(periodo)">
+                Editar
+              </button>
+              <button pButton type="button" severity="danger" (click)="remove(periodo.id)">
+                Remover
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <p-dialog
+    [visible]="modalVisible()"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '40rem', 'max-width': '95vw' }"
+    [header]="editingId() ? 'Editar periodo' : 'Novo periodo'"
+    (onHide)="cancelEdit()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-3">
+      <label class="flex flex-col gap-1 text-sm">
+        Nome
+        <input pInputText type="text" formControlName="nome" placeholder="Manha, Tarde, Noite..." />
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <small class="text-red-600">Nome deve ter ao menos 2 caracteres.</small>
+        }
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Inicio
+        <input pInputText type="time" formControlName="horaInicio" />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Fim
+        <input pInputText type="time" formControlName="horaFim" />
+      </label>
+
+      <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
+    </form>
+  </p-dialog>
+</section>

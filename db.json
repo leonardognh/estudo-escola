@@ -1,0 +1,288 @@
+{
+  "alunos": [
+    {
+      "nome": "Aluno 1",
+      "email": "aln1@escola.com",
+      "id": "MYF1qtnT9E0"
+    },
+    {
+      "nome": "Aluno 2",
+      "email": "aln2@escola.com",
+      "turma": "",
+      "id": "dK5At1b4Mu4"
+    },
+    {
+      "nome": "Aluno 3",
+      "email": "aln3@escola.com",
+      "turma": "",
+      "id": "FbBMagE-n-A"
+    },
+    {
+      "nome": "Aluno 4",
+      "email": "aln4@escola.com",
+      "turma": "",
+      "id": "v8GT4LxfSuw"
+    },
+    {
+      "nome": "Aluno 5",
+      "email": "aln5@escola.com",
+      "turma": "",
+      "id": "WXNlyb07jmw"
+    },
+    {
+      "nome": "Aluno 6",
+      "email": "aln6@escola.com",
+      "turma": "",
+      "id": "kSFDLEo-bqQ"
+    }
+  ],
+  "professores": [
+    {
+      "nome": "Professor 1",
+      "email": "prof1@escola.com",
+      "materiaPrincipalId": "XuD9oIFjrcQ",
+      "outrasMateriasIds": [
+        "TCIhwPQrpfU"
+      ],
+      "id": "q85LSI9FYXI"
+    },
+    {
+      "nome": "Professor 2",
+      "email": "prof2@escola.com",
+      "materiaPrincipalId": "W9KFtWyglOQ",
+      "outrasMateriasIds": [
+        "TCIhwPQrpfU",
+        "XuD9oIFjrcQ"
+      ],
+      "id": "RbSHWZ1cL5A"
+    },
+    {
+      "nome": "Professor 3",
+      "email": "prof3@escola.com",
+      "materiaPrincipalId": "pQBbO_6vvic",
+      "outrasMateriasIds": [],
+      "id": "8DAEXR5koqY"
+    }
+  ],
+  "materias": [
+    {
+      "nome": "Português",
+      "codigo": "PORT",
+      "id": "XuD9oIFjrcQ"
+    },
+    {
+      "nome": "Matemática",
+      "codigo": "MAT",
+      "id": "pQBbO_6vvic"
+    },
+    {
+      "nome": "Geografia",
+      "codigo": "GEO",
+      "id": "W9KFtWyglOQ"
+    },
+    {
+      "nome": "História",
+      "codigo": "HIST",
+      "id": "TCIhwPQrpfU"
+    }
+  ],
+  "materiasPorAno": [
+    {
+      "ano": "1o ano",
+      "materiaId": "XuD9oIFjrcQ",
+      "cargaHoraria": 40,
+      "professorPrincipalId": "q85LSI9FYXI",
+      "professorSubstitutoId": "RbSHWZ1cL5A",
+      "id": "O5028t2qZ_8"
+    },
+    {
+      "ano": "1o ano",
+      "materiaId": "TCIhwPQrpfU",
+      "cargaHoraria": 40,
+      "professorPrincipalId": "q85LSI9FYXI",
+      "professorSubstitutoId": "RbSHWZ1cL5A",
+      "id": "l0v7vHnvJ2Q"
+    },
+    {
+      "ano": "1o ano",
+      "materiaId": "pQBbO_6vvic",
+      "cargaHoraria": 40,
+      "professorPrincipalId": "8DAEXR5koqY",
+      "professorSubstitutoId": null,
+      "id": "nT33SrRfUmM"
+    },
+    {
+      "ano": "1o ano",
+      "materiaId": "W9KFtWyglOQ",
+      "cargaHoraria": 40,
+      "professorPrincipalId": "RbSHWZ1cL5A",
+      "professorSubstitutoId": null,
+      "id": "uKeWXmskjPI"
+    }
+  ],
+  "turmas": [
+    {
+      "ano": "1o ano",
+      "nome": "MANHA-A",
+      "periodoId": "per-manha",
+      "divisaoNotas": "bimestral",
+      "alunosIds": [
+        "MYF1qtnT9E0",
+        "dK5At1b4Mu4",
+        "FbBMagE-n-A"
+      ],
+      "id": "UM7soHOIOpg"
+    },
+    {
+      "ano": "1o ano",
+      "nome": "TARDE-A",
+      "periodoId": "per-tarde",
+      "divisaoNotas": "bimestral",
+      "alunosIds": [
+        "v8GT4LxfSuw",
+        "WXNlyb07jmw"
+      ],
+      "id": "tN8zwfDzqlM"
+    },
+    {
+      "ano": "1o ano",
+      "nome": "NOITE-A",
+      "periodoId": "per-noite",
+      "divisaoNotas": "bimestral",
+      "alunosIds": [
+        "kSFDLEo-bqQ"
+      ],
+      "id": "wj19r5ZvoQE"
+    }
+  ],
+  "periodos": [
+    {
+      "id": "per-manha",
+      "nome": "Manha",
+      "horaInicio": "08:00",
+      "horaFim": "12:00"
+    },
+    {
+      "id": "per-tarde",
+      "nome": "Tarde",
+      "horaInicio": "14:00",
+      "horaFim": "18:00"
+    },
+    {
+      "id": "per-noite",
+      "nome": "Noite",
+      "horaInicio": "19:00",
+      "horaFim": "22:30"
+    }
+  ],
+  "horariosAulas": [
+    {
+      "turmaId": "UM7soHOIOpg",
+      "materiaPorAnoId": "O5028t2qZ_8",
+      "diaSemana": "segunda",
+      "horaInicio": "08:00",
+      "horaFim": "09:00",
+      "id": "B3zntLEIu7E"
+    },
+    {
+      "turmaId": "tN8zwfDzqlM",
+      "materiaPorAnoId": "O5028t2qZ_8",
+      "diaSemana": "segunda",
+      "horaInicio": "13:00",
+      "horaFim": "14:00",
+      "id": "cAKB0I1SskY"
+    },
+    {
+      "turmaId": "wj19r5ZvoQE",
+      "materiaPorAnoId": "l0v7vHnvJ2Q",
+      "diaSemana": "terca",
+      "horaInicio": "19:00",
+      "horaFim": "20:00",
+      "id": "-EfY_A2jl90"
+    }
+  ],
+  "notas": [
+    {
+      "alunoId": "MYF1qtnT9E0",
+      "turmaId": "UM7soHOIOpg",
+      "materiaId": "XuD9oIFjrcQ",
+      "bimestre": "1o bimestre",
+      "valor": 7.33,
+      "id": "nota-1"
+    }
+  ],
+  "presencas": [
+    {
+      "id": "pres-1",
+      "alunoId": "MYF1qtnT9E0",
+      "horarioAulaId": "B3zntLEIu7E",
+      "data": "2026-05-01",
+      "status": "presente"
+    }
+  ],
+  "atividades": [
+    {
+      "id": "atv-1",
+      "nome": "Prova de Portugues",
+      "descricao": "Interpretacao de texto e gramatica",
+      "tipo": "prova",
+      "turmaId": "UM7soHOIOpg",
+      "alunoId": "MYF1qtnT9E0",
+      "materiaId": "XuD9oIFjrcQ",
+      "bimestre": "1o bimestre",
+      "peso": 2,
+      "notaAtividade": 8.5
+    },
+    {
+      "nome": "teses",
+      "descricao": "testes",
+      "tipo": "trabalho",
+      "turmaId": "UM7soHOIOpg",
+      "alunoId": "MYF1qtnT9E0",
+      "materiaId": "XuD9oIFjrcQ",
+      "bimestre": "1o bimestre",
+      "peso": 1,
+      "notaAtividade": 5,
+      "id": "ZdRZh5bJn3Y"
+    }
+  ],
+  "configuracoesEscola": [
+    {
+      "id": "cfg-1",
+      "nomeEscola": "Escola Exemplo",
+      "periodizacaoNotas": "bimestral",
+      "mediaAprovacao": 6,
+      "notaMaxima": 10,
+      "usaRecuperacao": true,
+      "permiteLancamentoManual": true,
+      "mostrarRankingTurma": false
+    }
+  ],
+  "usuarios": [
+    {
+      "id": "usr-admin",
+      "nome": "Administrador",
+      "email": "admin@escola.com",
+      "senha": "admin123",
+      "role": "admin",
+      "professorId": null
+    },
+    {
+      "id": "usr-prof-1",
+      "nome": "Professor 1",
+      "email": "prof1@escola.com",
+      "senha": "prof123",
+      "role": "professor",
+      "professorId": "q85LSI9FYXI"
+    },
+    {
+      "id": "usr-prof-2",
+      "nome": "Professor 2",
+      "email": "prof2@escola.com",
+      "senha": "prof123",
+      "role": "professor",
+      "professorId": "RbSHWZ1cL5A"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
+}

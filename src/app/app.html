@@ -1,0 +1,77 @@
+<p-toast />
+
+@if (isLoginRoute()) {
+  <main class="mx-auto min-h-screen w-full max-w-screen-2xl overflow-x-hidden px-3 py-4 sm:px-4 sm:py-6">
+    <router-outlet />
+  </main>
+} @else {
+  <main class="min-h-screen overflow-x-hidden app-shell-bg">
+    <div class="mx-auto grid min-h-screen w-full max-w-screen-2xl gap-4 overflow-x-hidden p-3 md:grid-cols-[280px_minmax(0,1fr)] md:p-4">
+      <aside class="app-panel-bg app-panel-border rounded-xl border p-4">
+        <header class="app-panel-border mb-5 border-b pb-4">
+          <div class="flex items-center justify-between gap-2">
+            <h1 class="text-2xl font-bold text-color">Escola</h1>
+            <button pButton type="button" severity="secondary" variant="outlined" (click)="toggleTheme()">
+              {{ isDarkTheme() ? 'Light' : 'Dark' }}
+            </button>
+          </div>
+          @if (currentUser(); as user) {
+            <p class="mt-2 text-sm text-surface-600">{{ user.nome }} ({{ user.role }})</p>
+          }
+        </header>
+
+        <div class="mb-4 md:hidden">
+          <label class="sr-only" for="app-route-select">Navegacao</label>
+          <select
+            id="app-route-select"
+            class="w-full rounded-md border border-surface-300 bg-surface-0 px-3 py-2 text-sm text-surface-900"
+            [value]="selectedRoute()"
+            (change)="onNavigate($any($event.target).value)"
+          >
+            @for (section of navSections(); track section.group) {
+              <optgroup [label]="section.group">
+                @for (item of section.items; track item.path) {
+                  <option [value]="item.path">{{ item.label }}</option>
+                }
+              </optgroup>
+            }
+          </select>
+        </div>
+
+        <nav class="hidden space-y-4 md:block">
+          @for (section of navSections(); track section.group) {
+            <section>
+              <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-surface-500">
+                {{ section.group }}
+              </h2>
+              <div class="flex flex-col gap-2">
+                @for (item of section.items; track item.path) {
+                  <button
+                    pButton
+                    severity="secondary"
+                    [routerLink]="item.path"
+                    routerLinkActive="p-button-info"
+                    [routerLinkActiveOptions]="{ exact: true }"
+                    class="justify-start"
+                  >
+                    {{ item.label }}
+                  </button>
+                }
+              </div>
+            </section>
+          }
+        </nav>
+
+        <div class="app-panel-border mt-6 border-t pt-4">
+          <button pButton severity="danger" variant="outlined" class="w-full" (click)="logout()">
+            Sair
+          </button>
+        </div>
+      </aside>
+
+      <section class="app-panel-bg app-panel-border min-w-0 overflow-x-hidden rounded-xl border p-4 sm:p-5">
+        <router-outlet />
+      </section>
+    </div>
+  </main>
+}

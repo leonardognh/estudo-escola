@@ -1,0 +1,130 @@
+<section class="space-y-4">
+  <p-confirmdialog />
+  <app-page-header [title]="labels.title" actionLabel="Nova turma" (action)="openCreateModal()" />
+
+  @if (facade.loading()) {
+    <p class="text-sm text-muted-color">Carregando...</p>
+  } @else {
+    <p-table
+      #dtTurmas
+      [value]="facade.turmas()"
+      [paginator]="true"
+      [rows]="8"
+      [globalFilterFields]="['ano', 'nome']"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="caption">
+        <app-table-search placeholder="Pesquisar turma" (searchChange)="dtTurmas.filterGlobal($event, 'contains')" />
+      </ng-template>
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Ano</th>
+          <th>Turma</th>
+          <th>Periodo</th>
+          <th>Divisao das notas</th>
+          <th>Alunos</th>
+          <th class="w-36">Acoes</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-turma>
+        <tr>
+          <td>{{ turma.ano }}</td>
+          <td>{{ turma.nome }}</td>
+          <td>{{ facade.getPeriodoLabelById(turma.periodoId) }}</td>
+          <td>{{ turma.divisaoNotas || 'bimestral' }}</td>
+          <td>{{ facade.getAlunosNamesByIds(turma.alunosIds) || 'Nenhum aluno atribuido' }}</td>
+          <td>
+            <div class="flex gap-2">
+              <button pButton type="button" severity="secondary" (click)="startEdit(turma)">
+                {{ labels.edit }}
+              </button>
+              <button pButton type="button" severity="danger" (click)="remove(turma.id)">
+                {{ labels.remove }}
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  }
+
+  <p-dialog
+    [visible]="modalVisible()"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '60rem', 'max-width': '95vw' }"
+    [contentStyle]="{ overflow: 'visible' }"
+    [header]="editingId() ? 'Editar turma' : 'Nova turma'"
+    (onHide)="cancelEdit()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-6">
+      <label class="flex flex-col gap-1 text-sm md:col-span-2">
+        Ano
+        <p-select
+          formControlName="ano"
+          [options]="anoOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm md:col-span-4">
+        Turma
+        <input pInputText type="text" formControlName="nome" />
+        @if (form.controls.nome.touched && form.controls.nome.invalid) {
+          <small class="text-red-600">Nome da turma e obrigatorio.</small>
+        }
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm md:col-span-2">
+        Periodo
+        <p-select
+          formControlName="periodoId"
+          [options]="facade.periodosOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm md:col-span-2">
+        Divisao das notas
+        <p-select
+          formControlName="divisaoNotas"
+          [options]="divisaoNotasOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm md:col-span-2">
+        Alunos da turma
+        <p-multiSelect
+          formControlName="alunosIds"
+          [options]="facade.alunosOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          defaultLabel="Selecione os alunos"
+          [maxSelectedLabels]="2"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <div class="md:col-span-6">
+        <app-form-actions
+          [loading]="facade.loading()"
+          [saveLabel]="labels.save"
+          [cancelLabel]="labels.cancel"
+          (cancel)="cancelEdit()"
+        />
+      </div>
+    </form>
+  </p-dialog>
+</section>

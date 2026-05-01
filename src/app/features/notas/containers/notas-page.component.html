@@ -1,0 +1,192 @@
+<section class="space-y-4">
+  <p-confirmdialog />
+  <app-page-header title="Notas e boletim" actionLabel="Nova nota" (action)="openCreateModal()" />
+
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0">Cadastro de nota</p-tab>
+      <p-tab value="1">Boletim</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        <p-card>
+          <p-table
+            #dtNotas
+            [value]="boletimRows()"
+            [paginator]="true"
+            [rows]="8"
+            [globalFilterFields]="['alunoNome', 'materiaNome', 'bimestre', 'turmaNome']"
+            responsiveLayout="scroll"
+          >
+            <ng-template pTemplate="caption">
+              <app-table-search placeholder="Pesquisar nota" (searchChange)="dtNotas.filterGlobal($event, 'contains')" />
+            </ng-template>
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Turma</th>
+                <th>Aluno</th>
+                <th>Materia</th>
+                <th>Bimestre</th>
+                <th>Nota</th>
+                <th class="w-36">Acoes</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.turmaNome }}</td>
+                <td>{{ row.alunoNome }}</td>
+                <td>{{ row.materiaNome }}</td>
+                <td>{{ row.bimestre }}</td>
+                <td>{{ row.valor }}</td>
+                <td>
+                  <div class="flex gap-2">
+                    <button pButton type="button" severity="secondary" (click)="startEdit(row)">Editar</button>
+                    <button pButton type="button" severity="danger" (click)="confirmRemove(row.id)">Remover</button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
+      <p-tabpanel value="1">
+        <p-card>
+          <div class="mb-4 grid gap-3 md:grid-cols-2">
+            <label class="flex flex-col gap-1 text-sm">
+              Alunos para comparativo
+              <p-multiSelect
+                [ngModel]="boletimAlunoIds()"
+                (ngModelChange)="boletimAlunoIds.set($event ?? [])"
+                [options]="boletimAlunoOptions()"
+                optionLabel="label"
+                optionValue="value"
+                [filter]="true"
+                [showClear]="true"
+                [fluid]="true"
+                appendTo="body"
+                defaultLabel="Selecione alunos"
+              />
+            </label>
+            <label class="flex flex-col gap-1 text-sm">
+              Bimestres para comparativo
+              <p-multiSelect
+                [ngModel]="boletimBimestres()"
+                (ngModelChange)="boletimBimestres.set($event ?? [])"
+                [options]="bimestreOptions"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+                [fluid]="true"
+                appendTo="body"
+                defaultLabel="Selecione bimestres"
+              />
+            </label>
+          </div>
+
+          <div class="space-y-4">
+            @if (!boletimGroups().length) {
+              <p class="text-sm text-muted-color">Nenhum boletim encontrado para os filtros selecionados.</p>
+            } @else {
+              @for (group of boletimGroups(); track group.alunoNome + group.turmaNome + group.bimestre) {
+                <p-card>
+                  <h3 class="mb-3 text-lg font-medium">
+                    {{ group.alunoNome }} - {{ group.turmaNome }} - {{ group.bimestre }}
+                  </h3>
+                  <p-table [value]="group.items" responsiveLayout="scroll">
+                    <ng-template pTemplate="header">
+                      <tr>
+                        <th>Materia</th>
+                        <th>Nota</th>
+                      </tr>
+                    </ng-template>
+                    <ng-template pTemplate="body" let-item>
+                      <tr>
+                        <td>{{ item.materiaNome }}</td>
+                        <td>{{ item.valor }}</td>
+                      </tr>
+                    </ng-template>
+                  </p-table>
+                </p-card>
+              }
+            }
+          </div>
+        </p-card>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <p-dialog
+    [visible]="modalVisible()"
+    [modal]="true"
+    [closable]="true"
+    [style]="{ width: '50rem', 'max-width': '95vw' }"
+    [contentStyle]="{ overflow: 'visible' }"
+    [header]="editingId() ? 'Editar nota' : 'Nova nota'"
+    (onHide)="cancelEdit()"
+  >
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-2">
+      <label class="flex flex-col gap-1 text-sm md:col-span-2">
+        Turma
+        <p-select
+          formControlName="turmaId"
+          [options]="facade.turmaOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Aluno
+        <p-select
+          formControlName="alunoId"
+          [options]="alunosOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Materia
+        <p-select
+          formControlName="materiaId"
+          [options]="materiasOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [filter]="true"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Bimestre
+        <p-select
+          formControlName="bimestre"
+          [options]="bimestreOptions"
+          optionLabel="label"
+          optionValue="value"
+          [fluid]="true"
+          appendTo="body"
+        />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Nota (0 a 10)
+        <input pInputText type="number" min="0" max="10" step="0.1" formControlName="valor" />
+        @if (form.controls.valor.touched && form.controls.valor.invalid) {
+          <small class="text-red-600">A nota deve estar entre 0 e 10.</small>
+        }
+      </label>
+
+      <div class="md:col-span-2">
+        <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
+      </div>
+    </form>
+  </p-dialog>
+</section>

@@ -1,0 +1,23 @@
+<section class="mx-auto mt-10 w-full max-w-md">
+  <p-card>
+    <h2 class="mb-4 text-2xl font-semibold text-color">Entrar</h2>
+    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
+      <label class="flex flex-col gap-1 text-sm">
+        Email
+        <input pInputText type="email" formControlName="email" placeholder="voce@escola.com" />
+      </label>
+
+      <label class="flex flex-col gap-1 text-sm">
+        Senha
+        <input pInputText type="password" formControlName="senha" placeholder="Digite sua senha" />
+      </label>
+
+      <label class="flex items-center gap-2 text-sm">
+        <input type="checkbox" formControlName="lembrarMe" />
+        Lembrar de mim
+      </label>
+
+      <button pButton type="submit" class="w-full">Entrar</button>
+    </form>
+  </p-card>
+</section>

@@ -1,0 +1,52 @@
+/* To learn more about Typescript configuration file: https://www.typescriptlang.org/docs/handbook/tsconfig-json.html. */
+/* To learn more about Angular compiler options: https://angular.dev/reference/configs/angular-compiler-options. */
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+    "target": "ES2022",
+    "module": "preserve",
+    "baseUrl": "./src",
+    "paths": {
+      "@app/*": ["app/*"],
+      "@auth/*": ["app/core/auth/*"],
+      "@shared/*": ["app/shared/*"],
+      "@alunos/*": ["app/features/alunos/*"],
+      "@professores/*": ["app/features/professores/*"],
+      "@materias/*": ["app/features/materias/*"],
+      "@materias-ano/*": ["app/features/materias-ano/*"],
+      "@turmas/*": ["app/features/turmas/*"],
+      "@periodos/*": ["app/features/periodos/*"],
+      "@horarios/*": ["app/features/horarios-aulas/*"],
+      "@calendario/*": ["app/features/calendario/*"],
+      "@notas/*": ["app/features/notas/*"],
+      "@presencas/*": ["app/features/presencas/*"],
+      "@inicio/*": ["app/features/inicio/*"],
+      "@atividades/*": ["app/features/atividades/*"],
+      "@configuracoes/*": ["app/features/configuracoes/*"]
+    }
+  },
+  "angularCompilerOptions": {
+    "enableI18nLegacyMessageIdFormat": false,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  },
+  "files": [],
+  "references": [
+    {
+      "path": "./tsconfig.app.json"
+    },
+    {
+      "path": "./tsconfig.spec.json"
+    }
+  ]
+}

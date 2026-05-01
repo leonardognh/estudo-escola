@@ -1,0 +1,21 @@
+<p class="text-sm text-muted-color">
+  Fluxo rapido para rotina docente com foco em execucao, acompanhamento e lancamentos.
+</p>
+
+<div class="grid gap-4">
+  @for (step of steps; track step.title) {
+    <p-card>
+      <div class="space-y-3 text-color">
+        <h3 class="text-lg font-medium text-color">{{ step.title }}</h3>
+        <p class="text-sm text-muted-color">{{ step.description }}</p>
+        <div class="flex flex-wrap gap-2">
+          @for (link of step.links; track link.path + link.label) {
+            <a pButton severity="contrast" variant="outlined" [routerLink]="link.path" class="no-underline">
+              {{ link.label }}
+            </a>
+          }
+        </div>
+      </div>
+    </p-card>
+  }
+</div>

@@ -1,0 +1,197 @@
+<section class="space-y-4">
+  <h2 class="text-2xl font-semibold text-color">Calendario</h2>
+
+  <p-card>
+    <h3 class="mb-3 text-lg font-medium">Filtros inteligentes</h3>
+    <form [formGroup]="filtersForm" class="grid gap-3 md:grid-cols-6">
+      <label class="flex flex-col gap-1 text-sm">
+        Ano
+        <p-select
+          formControlName="ano"
+          [options]="facade.anosOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [fluid]="true"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Turma
+        <p-select
+          formControlName="turmaId"
+          [options]="turmasOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [filter]="true"
+          [fluid]="true"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Periodo
+        <p-select
+          formControlName="periodo"
+          [options]="periodosOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [fluid]="true"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Materia
+        <p-select
+          formControlName="materiaId"
+          [options]="materiasOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [filter]="true"
+          [fluid]="true"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Professor
+        <p-select
+          formControlName="professorId"
+          [options]="professoresOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [filter]="true"
+          [fluid]="true"
+        />
+      </label>
+      <label class="flex flex-col gap-1 text-sm">
+        Aluno
+        <p-select
+          formControlName="alunoId"
+          [options]="alunosOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [showClear]="true"
+          [filter]="true"
+          [fluid]="true"
+        />
+      </label>
+    </form>
+  </p-card>
+
+  <p-card>
+    <div class="mb-4 flex flex-wrap items-center gap-2">
+      <button
+        pButton
+        type="button"
+        [severity]="mode() === 'day' ? 'primary' : 'secondary'"
+        [outlined]="mode() !== 'day'"
+        (click)="setMode('day')"
+      >
+        Diario
+      </button>
+      <button
+        pButton
+        type="button"
+        [severity]="mode() === 'week' ? 'primary' : 'secondary'"
+        [outlined]="mode() !== 'week'"
+        (click)="setMode('week')"
+      >
+        Semanal
+      </button>
+    </div>
+
+    @if (mode() === 'day') {
+      <div class="space-y-4">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-center text-lg font-medium">{{ headerDayLabel() }}</h3>
+          <p-datepicker
+            [ngModel]="selectedDay()"
+            (ngModelChange)="onDayChange($event)"
+            [showIcon]="true"
+            inputId="dayCalendarSelector"
+          />
+        </div>
+
+        <p-table [value]="dailyRows()" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="w-28">Horario</th>
+              <th>Materias</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.slot }}</td>
+              <td>
+                <div class="flex flex-wrap gap-2">
+                  @if (!row.items.length) {
+                    <span class="text-sm text-muted-color">-</span>
+                  } @else {
+                    @for (item of row.items; track item.id) {
+                      <p-card>
+                        <div class="flex flex-col text-sm">
+                          <strong>{{ item.title }}</strong>
+                          <span>{{ item.subtitle }}</span>
+                          <span class="text-muted-color">{{ item.time }}</span>
+                        </div>
+                      </p-card>
+                    }
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    } @else {
+      <div class="space-y-4">
+        <div class="flex items-center justify-between gap-2">
+          <h3 class="text-lg font-medium">{{ headerWeekLabel() }}</h3>
+          <p-datepicker
+            [ngModel]="selectedWeekRange()"
+            (ngModelChange)="onWeekRangeChange($event)"
+            selectionMode="range"
+            [showIcon]="true"
+            inputId="weekCalendarSelector"
+          />
+        </div>
+
+        <div class="overflow-x-auto">
+          <p-table [value]="weeklyRows()" [tableStyle]="{ 'min-width': weeklyGridMinWidth() }" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="w-28">Horario</th>
+                @for (day of selectedWeekDaysWithLabel(); track day.date.getTime()) {
+                  <th>{{ day.label }}</th>
+                }
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.slot }}</td>
+                @for (cellItems of row.dayCells; track $index) {
+                  <td>
+                    <div class="flex flex-col gap-2">
+                      @if (!cellItems.length) {
+                        <span class="text-sm text-muted-color">-</span>
+                      } @else {
+                        @for (item of cellItems; track item.id) {
+                          <p-card>
+                            <div class="flex flex-col text-sm">
+                              <strong>{{ item.title }}</strong>
+                              <span>{{ item.subtitle }}</span>
+                              <span class="text-muted-color">{{ item.time }}</span>
+                            </div>
+                          </p-card>
+                        }
+                      }
+                    </div>
+                  </td>
+                }
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </div>
+    }
+  </p-card>
+</section>

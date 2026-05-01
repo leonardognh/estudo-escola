@@ -1,0 +1,132 @@
+import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ButtonModule } from 'primeng/button';
+import { CardModule } from 'primeng/card';
+import { InputTextModule } from 'primeng/inputtext';
+import { TableModule } from 'primeng/table';
+import { DialogModule } from 'primeng/dialog';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { ConfirmationService, MessageService } from 'primeng/api';
+import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
+import { TableSearchComponent } from '@shared/components/table-search/table-search.component';
+import { FormActionsComponent } from '@shared/components/form-actions/form-actions.component';
+
+import { PeriodosFacade } from '@periodos/facades/periodos.facade';
+import { Periodo } from '@periodos/models/periodo.model';
+
+@Component({
+  selector: 'app-periodos-page',
+  standalone: true,
+  imports: [
+    ReactiveFormsModule,
+    ButtonModule,
+    CardModule,
+    InputTextModule,
+    TableModule,
+    DialogModule,
+    ConfirmDialogModule,
+    PageHeaderComponent,
+    TableSearchComponent,
+    FormActionsComponent,
+  ],
+  providers: [PeriodosFacade],
+  templateUrl: './periodos-page.component.html',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+})
+export class PeriodosPageComponent {
+  private readonly formBuilder = inject(FormBuilder);
+  private readonly messageService = inject(MessageService);
+  private readonly confirmationService = inject(ConfirmationService);
+  protected readonly facade = inject(PeriodosFacade);
+  protected readonly editingId = signal<string | null>(null);
+  protected readonly modalVisible = signal(false);
+
+  protected readonly form = this.formBuilder.nonNullable.group({
+    nome: ['', [Validators.required, Validators.minLength(2)]],
+    horaInicio: ['08:00', [Validators.required]],
+    horaFim: ['12:00', [Validators.required]],
+  });
+
+  constructor() {
+    this.facade.loadPeriodos();
+    effect(() => {
+      const error = this.facade.errorMessage();
+      if (error) {
+        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+      }
+    });
+  }
+
+  protected openCreateModal(): void {
+    this.cancelEdit();
+    this.modalVisible.set(true);
+  }
+
+  protected submit(): void {
+    if (this.form.invalid) {
+      this.form.markAllAsTouched();
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validacao',
+        detail: 'Preencha os campos obrigatorios.',
+      });
+      return;
+    }
+
+    if (this.form.controls.horaInicio.value >= this.form.controls.horaFim.value) {
+      this.facade.errorMessage.set('Hora de inicio deve ser menor que hora de fim.');
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Validacao',
+        detail: 'Hora de inicio deve ser menor que hora de fim.',
+      });
+      return;
+    }
+
+    this.facade.savePeriodo(this.editingId(), this.form.getRawValue());
+    this.messageService.add({
+      severity: 'success',
+      summary: 'Sucesso',
+      detail: this.editingId() ? 'Periodo atualizado.' : 'Periodo cadastrado.',
+    });
+    this.cancelEdit();
+  }
+
+  protected startEdit(periodo: Periodo): void {
+    this.editingId.set(periodo.id);
+    this.modalVisible.set(true);
+    this.form.setValue({
+      nome: periodo.nome,
+      horaInicio: periodo.horaInicio,
+      horaFim: periodo.horaFim,
+    });
+  }
+
+  protected cancelEdit(): void {
+    this.editingId.set(null);
+    this.modalVisible.set(false);
+    this.form.reset({
+      nome: '',
+      horaInicio: '08:00',
+      horaFim: '12:00',
+    });
+  }
+
+  protected remove(id: string): void {
+    this.confirmationService.confirm({
+      header: 'Confirmar remocao',
+      message: 'Deseja remover este periodo?',
+      acceptLabel: 'Remover',
+      rejectLabel: 'Cancelar',
+      acceptButtonStyleClass: 'p-button-danger',
+      accept: () => {
+        this.facade.deletePeriodo(id);
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Sucesso',
+          detail: 'Periodo removido.',
+        });
+      },
+    });
+  }
+}
