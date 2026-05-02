@@ -20,10 +20,10 @@ export type HorarioAulaFormValue = Omit<HorarioAula, 'id'>;
 
 export const DIA_SEMANA_OPTIONS: readonly { label: string; value: DiaSemana }[] = [
   { label: 'Segunda', value: 'segunda' },
-  { label: 'Terca', value: 'terca' },
+  { label: 'Terça', value: 'terca' },
   { label: 'Quarta', value: 'quarta' },
   { label: 'Quinta', value: 'quinta' },
   { label: 'Sexta', value: 'sexta' },
-  { label: 'Sabado', value: 'sabado' },
+  { label: 'Sábado', value: 'sabado' },
   { label: 'Domingo', value: 'domingo' },
 ];

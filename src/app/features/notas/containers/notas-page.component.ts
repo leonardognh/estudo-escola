@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -12,6 +13,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { startWith } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { TableSearchComponent } from '@shared/components/table-search/table-search.component';
 import { FormActionsComponent } from '@shared/components/form-actions/form-actions.component';
@@ -26,6 +28,7 @@ import { BIMESTRE_OPTIONS, Nota } from '@notas/models/nota.model';
     ReactiveFormsModule,
     FormsModule,
     ButtonModule,
+    TooltipModule,
     CardModule,
     DialogModule,
     ConfirmDialogModule,
@@ -34,6 +37,7 @@ import { BIMESTRE_OPTIONS, Nota } from '@notas/models/nota.model';
     MultiSelectModule,
     InputTextModule,
     TableModule,
+    TranslocoPipe,
     PageHeaderComponent,
     TableSearchComponent,
     FormActionsComponent,
@@ -46,6 +50,7 @@ export class NotasPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(NotasFacade);
   protected readonly modalVisible = signal(false);
   protected readonly editingId = signal<string | null>(null);
@@ -133,7 +138,11 @@ export class NotasPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
   }
@@ -148,8 +157,8 @@ export class NotasPageComponent {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha os campos obrigatorios.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('validation.fillFields'),
       });
       return;
     }
@@ -168,8 +177,8 @@ export class NotasPageComponent {
     if (duplicate) {
       this.messageService.add({
         severity: 'warn',
-        summary: 'Regra de negocio',
-        detail: 'Ja existe nota para aluno/materia/bimestre. Edite ou remova a existente.',
+        summary: this.transloco.translate('notas.duplicate.summary'),
+        detail: this.transloco.translate('notas.duplicate.detail'),
       });
       return;
     }
@@ -177,8 +186,8 @@ export class NotasPageComponent {
     this.facade.saveNota(this.editingId(), payload);
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: this.editingId() ? 'Nota atualizada.' : 'Nota cadastrada.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate(this.editingId() ? 'notas.toast.updated' : 'notas.toast.created'),
     });
     this.cancelEdit();
   }
@@ -209,14 +218,18 @@ export class NotasPageComponent {
 
   protected confirmRemove(id: string): void {
     this.confirmationService.confirm({
-      header: 'Confirmar remocao',
-      message: 'Deseja remover esta nota?',
-      acceptLabel: 'Remover',
-      rejectLabel: 'Cancelar',
+      header: this.transloco.translate('common.confirmRemoveTitle'),
+      message: this.transloco.translate('notas.confirm.message'),
+      acceptLabel: this.transloco.translate('common.remove'),
+      rejectLabel: this.transloco.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.facade.removeNota(id);
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Nota removida.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: this.transloco.translate('common.success'),
+          detail: this.transloco.translate('notas.toast.removed'),
+        });
       },
     });
   }

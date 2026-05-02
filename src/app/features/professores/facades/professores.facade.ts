@@ -21,6 +21,16 @@ export class ProfessoresFacade {
     })),
   );
 
+  readonly professoresTableRows = computed(() =>
+    this.professores().map((professor) => ({
+      ...professor,
+      materiaPrincipalNome: this.getMateriaNomeById(professor.materiaPrincipalId),
+      outrasMateriasNomes: professor.outrasMateriasIds.length
+        ? professor.outrasMateriasIds.map((id) => this.getMateriaNomeById(id)).join(', ')
+        : '',
+    })),
+  );
+
   loadProfessores(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -31,7 +41,7 @@ export class ProfessoresFacade {
           this.materias.set(materias);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar professores.');
+          this.errorMessage.set('errors.professores.load');
           return of([[], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -53,7 +63,7 @@ export class ProfessoresFacade {
           this.materias.set(materias);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar professor.');
+          this.errorMessage.set('errors.professores.save');
           return of([[], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -76,7 +86,7 @@ export class ProfessoresFacade {
           this.materias.set(materias);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover professor.');
+          this.errorMessage.set('errors.professores.remove');
           return of([[], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -85,6 +95,6 @@ export class ProfessoresFacade {
   }
 
   getMateriaNomeById(id: string): string {
-    return this.materias().find((materia) => materia.id === id)?.nome ?? 'Materia nao encontrada';
+    return this.materias().find((materia) => materia.id === id)?.nome ?? '—';
   }
 }

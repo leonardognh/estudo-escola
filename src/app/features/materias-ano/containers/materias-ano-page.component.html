@@ -1,10 +1,6 @@
 <section class="space-y-4">
   <p-confirmdialog />
-  <app-page-header
-    [title]="labels.title"
-    actionLabel="Nova atribuicao por ano"
-    (action)="openCreateModal()"
-  />
+  <app-page-header titleKey="materiasAno.pageTitle" actionLabelKey="materiasAno.newAction" (action)="openCreateModal()" />
 
   <p-table
     #dtMateriaAno
@@ -16,15 +12,15 @@
   >
     <ng-template pTemplate="caption">
       <app-table-search
-        placeholder="Pesquisar atribuicao"
+        placeholderKey="materiasAno.searchPlaceholder"
         (searchChange)="dtMateriaAno.filterGlobal($event, 'contains')"
       />
     </ng-template>
     <ng-template pTemplate="header">
       <tr>
-        <th>Ano</th>
-        <th>Materias</th>
-        <th class="w-36">Acoes</th>
+        <th>{{ 'materiasAno.col.year' | transloco }}</th>
+        <th>{{ 'materiasAno.col.subjects' | transloco }}</th>
+        <th class="w-24 sm:w-32">{{ 'alunos.col.actions' | transloco }}</th>
       </tr>
     </ng-template>
     <ng-template pTemplate="body" let-row>
@@ -32,9 +28,27 @@
         <td>{{ row.ano }}</td>
         <td>{{ row.materias }}</td>
         <td>
-          <div class="flex gap-2">
-            <button pButton type="button" severity="secondary" (click)="openEditModal(row.ano)">Editar</button>
-            <button pButton type="button" severity="danger" (click)="confirmRemoveAno(row.ano)">Remover</button>
+          <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+            <p-button
+              icon="pi pi-pencil"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              size="small"
+              [pTooltip]="'common.edit' | transloco"
+              tooltipPosition="top"
+              (onClick)="openEditModal(row.ano)"
+            />
+            <p-button
+              icon="pi pi-trash"
+              [rounded]="true"
+              [text]="true"
+              severity="danger"
+              size="small"
+              [pTooltip]="'common.remove' | transloco"
+              tooltipPosition="top"
+              (onClick)="confirmRemoveAno(row.ano)"
+            />
           </div>
         </td>
       </tr>
@@ -46,101 +60,93 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '72rem', 'max-width': '98vw' }"
-    [contentStyle]="{ overflow: 'visible' }"
-    [header]="editingAno() ? 'Editar atribuicoes do ano' : 'Nova atribuicao por ano'"
+    [header]="(editingAno() ? 'materiasAno.dialog.edit' : 'materiasAno.dialog.new') | transloco"
     (onHide)="closeModal()"
   >
-    <form [formGroup]="anoForm" (ngSubmit)="submitAnoMateria()" class="space-y-4">
-      <label class="flex flex-col gap-1 text-sm md:max-w-xs">
-        Ano
+    <form [formGroup]="anoForm" (ngSubmit)="submitAnoMateria()" class="min-w-0 space-y-4">
+      <label class="flex w-full max-w-md flex-col gap-1 text-sm">
+        {{ 'materiasAno.field.ano' | transloco }}
         <p-select formControlName="ano" [options]="anoOptions" optionLabel="label" optionValue="value" [fluid]="true" />
       </label>
 
-      <div class="min-h-72">
-      <p-table
-        [value]="anoMateriaItens.controls"
-        responsiveLayout="scroll"
-        [tableStyle]="{ 'min-width': '980px' }"
-      >
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Materia</th>
-            <th>Carga horaria</th>
-            <th>Professor principal</th>
-            <th>Professor substituto</th>
-            <th class="w-28">Acoes</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-item let-i="rowIndex">
-          <tr [formGroup]="item">
-            <td>
-              <p-select
-                formControlName="materiaId"
-                [options]="facade.materiaOptions()"
-                optionLabel="label"
-                optionValue="value"
-                [filter]="true"
-                [fluid]="true"
-                appendTo="body"
-              />
-            </td>
-            <td>
-              <input pInputText type="number" formControlName="cargaHoraria" />
-            </td>
-            <td>
-              <p-select
-                formControlName="professorPrincipalId"
-                [options]="getProfessoresOptionsByMateria(item.value.materiaId)"
-                optionLabel="label"
-                optionValue="value"
-                [filter]="true"
-                [fluid]="true"
-                appendTo="body"
-              />
-            </td>
-            <td>
-              <p-select
-                formControlName="professorSubstitutoId"
-                [options]="getProfessoresOptionsByMateria(item.value.materiaId)"
-                optionLabel="label"
-                optionValue="value"
-                [filter]="true"
-                [showClear]="true"
-                [fluid]="true"
-                appendTo="body"
-              />
-            </td>
-            <td>
-              <button
-                pButton
-                type="button"
-                severity="danger"
-                [outlined]="true"
-                (click)="removeAnoMateriaItem(i)"
-                [disabled]="anoMateriaItens.length === 1"
-              >
-                Remover
-              </button>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
+      <div class="min-h-72 min-w-0">
+        <p-table [value]="anoMateriaItens.controls" responsiveLayout="scroll" [tableStyle]="{ 'min-width': '980px' }">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'materiasAno.table.subject' | transloco }}</th>
+              <th>{{ 'materiasAno.table.workload' | transloco }}</th>
+              <th>{{ 'materiasAno.table.profPrincipal' | transloco }}</th>
+              <th>{{ 'materiasAno.table.profSubstitute' | transloco }}</th>
+              <th class="w-20 sm:w-24">{{ 'alunos.col.actions' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item let-i="rowIndex">
+            <tr [formGroup]="item">
+              <td>
+                <p-select
+                  formControlName="materiaId"
+                  [options]="facade.materiaOptions()"
+                  optionLabel="label"
+                  optionValue="value"
+                  [filter]="true"
+                  [fluid]="true"
+                  appendTo="body"
+                />
+              </td>
+              <td>
+                <input pInputText type="number" formControlName="cargaHoraria" />
+              </td>
+              <td>
+                <p-select
+                  formControlName="professorPrincipalId"
+                  [options]="getProfessoresOptionsByMateria(item.value.materiaId)"
+                  optionLabel="label"
+                  optionValue="value"
+                  [filter]="true"
+                  [fluid]="true"
+                  appendTo="body"
+                />
+              </td>
+              <td>
+                <p-select
+                  formControlName="professorSubstitutoId"
+                  [options]="getProfessoresOptionsByMateria(item.value.materiaId)"
+                  optionLabel="label"
+                  optionValue="value"
+                  [filter]="true"
+                  [showClear]="true"
+                  [fluid]="true"
+                  appendTo="body"
+                />
+              </td>
+              <td>
+                <p-button
+                  icon="pi pi-trash"
+                  type="button"
+                  severity="danger"
+                  [text]="true"
+                  [rounded]="true"
+                  size="small"
+                  [pTooltip]="'materiasAno.tooltip.removeRow' | transloco"
+                  tooltipPosition="top"
+                  (onClick)="removeAnoMateriaItem(i)"
+                  [disabled]="anoMateriaItens.length === 1"
+                />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
 
       <div class="flex flex-wrap justify-end gap-2">
         <button pButton type="button" severity="secondary" [outlined]="true" (click)="addAnoMateriaItem()">
-          Adicionar materia
+          {{ 'materiasAno.btn.addSubject' | transloco }}
         </button>
-        <app-form-actions
-          [loading]="facade.loading() || !facade.materias().length"
-          [saveLabel]="labels.save"
-          [cancelLabel]="labels.cancel"
-          (cancel)="closeModal()"
-        />
+        <app-form-actions [loading]="facade.loading() || !facade.materias().length" (cancel)="closeModal()" />
       </div>
 
-      @if (formError()) {
-        <p class="text-sm text-red-600">{{ formError() }}</p>
+      @if (formError(); as fe) {
+        <p class="text-sm text-red-600">{{ fe | transloco }}</p>
       }
     </form>
   </p-dialog>

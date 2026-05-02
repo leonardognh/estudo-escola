@@ -1,5 +1,5 @@
 ---
-description: Regras de desenvolvimento para o projeto Angular. Aplicar sempre que gerar, modificar ou revisar código Angular neste projeto.
+description: Regras completas de desenvolvimento Angular para este projeto. Aplicar sempre que gerar, modificar, revisar ou testar codigo.
 globs:
   - 'src/**/*.ts'
   - 'src/**/*.html'
@@ -11,289 +11,382 @@ alwaysApply: true
 
 # Regras do Projeto Angular
 
-## Contexto
+## Contexto e Stack
 
-Angular 20+, standalone components, Signals, NgRx Signal Store, Facade pattern, PrimeNG (styled mode), Tailwind CSS + `tailwindcss-primeui`, Transloco (i18n), Jest + ng-mocks. Arquitetura feature-based.
+Angular 20+, standalone components, TypeScript strict, Signals, NgRx Signal Store, Facade pattern, PrimeNG (styled mode), Tailwind CSS + `tailwindcss-primeui`, Transloco (i18n), Jest + ng-mocks. Arquitetura feature-based.
 
 ---
 
-## 1. Standalone Components
+## 1. Prioridades de Decisao
 
-- Todo componente, directive e pipe DEVE ser standalone
+1. Correcao funcional
+2. Legibilidade — outro dev entende sem explicacao
+3. Manutenibilidade e extensibilidade
+4. UX e acessibilidade
+5. Performance
+6. DRY — sem duplicacao
+
+---
+
+## 2. Standalone e Estrutura Angular
+
+- Todo `Component`, `Directive` e `Pipe` DEVE ser standalone
 - Nunca usar `NgModule`
+- Todos os componentes com `ChangeDetectionStrategy.OnPush`
+- Usar `inject()` — nunca constructor injection
+- Rotas lazy para features
 
 ```typescript
-// ✅
 @Component({
   standalone: true,
-  imports: [ButtonModule, TranslocoDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
+  imports: [CommonModule, ButtonModule, TranslocoDirective],
+  templateUrl: './feature-page.component.html',
 })
-
-// ❌
-@NgModule({ declarations: [MyComponent] })
+export class FeaturePageComponent {
+  private readonly facade = inject(FeatureFacade);
+}
 ```
 
-## 2. Signals e Reatividade
+---
 
-- Estado síncrono → `signal()`, `computed()`, `linkedSignal()`
-- Derivações → `computed()` (nunca `effect()`)
-- Side-effects → `effect()`
-- Dados assíncronos → `resource()`, `rxResource()`, `toSignal()`
-- Nunca `BehaviorSubject` para estado local
-- Nunca `subscribe()` manual
+## 3. Reatividade — Signals + RxJS
 
-## 3. Signal Inputs e Outputs
+| Caso                    | Usar                                           |
+| ----------------------- | ---------------------------------------------- |
+| Estado sincronico       | `signal()`, `computed()`, `linkedSignal()`     |
+| Derivacoes              | `computed()` — nunca `effect()` para derivacao |
+| Side-effects            | `effect()` (toasts, localStorage, analytics)   |
+| Dados assincronos       | `resource()`, `rxResource()`, `toSignal()`     |
+| Fluxos assincronos/HTTP | `Observable` + operadores RxJS                 |
+
+### Proibido
+
+- `BehaviorSubject` para estado local de componente
+- `subscribe()` manual em componente — usar alternativas declarativas
+- `Promise` / `async` / `await` para fluxo de dados — usar `Observable` sempre
+- Se `subscribe()` for necessario no facade, garantir tratamento de erro/loading e evitar leaks
+
+---
+
+## 4. Signal Inputs e Outputs
 
 ```typescript
-// ✅
+// Correto
 name = input.required<string>();
 selected = output<Item>();
 value = model<string>();
 
-// ❌
+// Proibido
 @Input() name!: string;
 @Output() selected = new EventEmitter<Item>();
 ```
 
-## 4. Template — New Control Flow
+---
+
+## 5. Template — Control Flow Moderno
 
 - APENAS `@if`, `@for`, `@switch`, `@defer`
 - Todo `@for` DEVE ter `track`
-- Nunca chamar funções no template
+- Nunca chamar funcoes no template — usar `computed()`
 
 ```html
-<!-- ✅ -->
 @if (facade.isLoading()) {
 <p-skeleton height="4rem" styleClass="w-full" />
 } @else { @for (item of facade.items(); track item.id) {
 <app-item-card [item]="item" />
 } }
-
-<!-- ❌ -->
-<div *ngIf="isLoading">
-  <div *ngFor="let item of getItems()"></div>
-</div>
-```
-
-## 5. Change Detection
-
-- TODOS os componentes: `ChangeDetectionStrategy.OnPush`
-- Nunca depender de Zone.js
-
-## 6. Dependency Injection
-
-```typescript
-// ✅
-private readonly facade = inject(QuotesFacade);
-
-// ❌
-constructor(private facade: QuotesFacade) {}
 ```
 
 ---
 
-## 7. Facade Pattern
-
-### Regras
-
-- **Um facade por feature** — nunca facades transversais
-- Componentes NUNCA acessam store ou serviços HTTP diretamente — sempre via facade
-- Facade expõe **Signals readonly** para componentes
-- Facade orquestra: store + serviços + notificações + navegação
-- Facade NÃO contém estado próprio — delega para store
-- Facade é providido no **componente container ou rota** (não `providedIn: 'root'`)
-- Se o facade crescer demais → dividir a feature
-
-### Padrão
-
-```typescript
-// features/quotes/facades/quotes.facade.ts
-@Injectable()
-export class QuotesFacade {
-  private readonly store = inject(QuotesStore);
-  private readonly quoteService = inject(QuoteService);
-  private readonly messageService = inject(MessageService);
-
-  // Seletores (readonly)
-  readonly quotes = this.store.filteredQuotes;
-  readonly isLoading = this.store.loading;
-
-  // Ações
-  loadQuotes(): void {
-    this.store.load();
-  }
-
-  async deleteQuote(id: string): Promise<void> {
-    try {
-      await firstValueFrom(this.quoteService.delete(id));
-      this.store.removeQuote(id);
-      this.messageService.add({ severity: 'success', summary: 'Removido' });
-    } catch {
-      this.messageService.add({ severity: 'error', summary: 'Erro' });
-    }
-  }
-}
-
-// Container component
-@Component({
-  providers: [QuotesFacade],
-  // ...
-})
-export class QuotesListComponent {
-  protected readonly facade = inject(QuotesFacade);
-}
-```
-
-### Estrutura de Feature com Facade
+## 6. Arquitetura por Feature
 
 ```
-features/<feature>/
-├── components/      # Dumb
-├── containers/      # Smart (injetam facade)
-├── facades/         # Feature facade
-├── services/        # HTTP
+src/app/features/<feature>/
+├── components/      # Dumb/presentational — recebem input, emitem output
+├── containers/      # Smart — injetam facade, orquestram
+├── facades/         # Interface da feature para UI
+├── services/        # Acesso HTTP
 ├── store/           # NgRx Signal Store
 ├── models/
 └── <feature>.routes.ts
 ```
 
----
-
-## 8. PrimeNG
-
-- **Imports granulares** obrigatórios
-- **Styled mode** com `definePreset()` + CSS Layer
-- Hierarquia: PrimeNG para interatividade complexa → Tailwind para layout
-- Nunca importar módulos inteiros
-
-```typescript
-// ✅
-import { ButtonModule } from 'primeng/button';
-import { TableModule } from 'primeng/table';
-
-// ❌
-import { PrimeNGModule } from 'primeng';
-```
-
-## 9. Tailwind CSS
-
-- **Tailwind-first** para layout — utility classes no template
-- **Nunca** PrimeFlex (deprecated)
-- **Tokens PrimeNG via plugin**: `bg-primary`, `text-surface-900`, `text-muted-color`
-- SCSS por componente apenas para o que Tailwind não cobre
-- Mobile-first com breakpoints (`sm:`, `md:`, `lg:`)
-- Resolver conflitos via **CSS Layer**, nunca `!important`
-
----
-
-## 10. Internacionalização — Transloco
-
 ### Regras
 
-- **Todo texto visível ao usuário** DEVE usar chaves de tradução — nunca hardcode
-- Chaves organizadas por feature: `quotes.title`, `quotes.actions.create`
-- Usar **structural directive** como padrão (uma subscription por template)
-- **Lazy load** de translations por rota com `TRANSLOCO_SCOPE`
-- Labels de PrimeNG (`[label]`, `placeholder`) via Transloco
-- Datas e números: usar pipes com locale
-
-### Padrão no Template
-
-```html
-<!-- ✅ -->
-<ng-container *transloco="let t">
-  <h1>{{ t('quotes.title') }}</h1>
-  <p-button [label]="t('quotes.actions.create')" icon="pi pi-plus" />
-  <input pInputText [placeholder]="t('quotes.search.placeholder')" />
-</ng-container>
-
-<!-- ❌ -->
-<h1>Cotações</h1>
-<p-button label="Nova Cotação" />
-```
-
-### Estrutura de Translations
-
-```
-src/assets/i18n/
-├── pt-BR.json          # Globais
-├── en.json
-├── quotes/
-│   ├── pt-BR.json      # Feature-specific
-│   └── en.json
-```
-
-### Preparação (mesmo antes de ativar)
-
-- Centralizar strings em constantes ou translations
-- Considerar expansão de texto (30-40%) no layout
-- Usar Transloco pipe em componentes dumb quando necessário
+- Container injeta facade — nunca service ou store direto
+- Componente dumb recebe `input()` e emite `output()`
+- Evitar logica de negocio no template
+- Evitar dependencia cruzada entre features
+- **Sempre separar em componentes especificos** — nunca criar tela monolitica
 
 ---
 
-## 11. NgRx Signal Store
+## 7. Facade Pattern — Obrigatorio
 
-- Um store por feature — nunca monolítico
+- Um facade por feature (ou subfeature bem definida)
+- Componente NUNCA acessa store ou service HTTP diretamente
+- Facade expoe **Signals readonly** para componentes
+- Facade NÃO contem estado proprio — delega para store
+- Facade e providido no componente container ou rota — nao `providedIn: 'root'`
+- Se o facade crescer demais → dividir a feature
+
+```typescript
+@Injectable()
+export class FeatureFacade {
+  private readonly store = inject(FeatureStore);
+  private readonly api = inject(FeatureService);
+  private readonly messageService = inject(MessageService);
+
+  // Seletores readonly
+  readonly items = this.store.filteredItems;
+  readonly isLoading = this.store.loading;
+
+  // Acoes
+  load(): void {
+    this.store.load();
+  }
+
+  delete(id: string): void {
+    this.api
+      .delete(id)
+      .pipe(
+        tap(() => {
+          this.store.remove(id);
+          this.messageService.add({ severity: 'success', summary: 'Removido' });
+        }),
+        catchError(() => {
+          this.messageService.add({ severity: 'error', summary: 'Erro' });
+          return EMPTY;
+        }),
+      )
+      .subscribe();
+  }
+}
+```
+
+```typescript
+@Component({
+  providers: [FeatureFacade],
+  // ...
+})
+export class FeatureContainerComponent {
+  protected readonly facade = inject(FeatureFacade);
+}
+```
+
+---
+
+## 8. NgRx Signal Store
+
+- Um store por feature — nunca monolitico
 - Estado privado, seletores via `withComputed`
 - Side-effects via `withMethods` + `rxMethod`
-- `patchState()` para atualizações parciais
+- `patchState()` para atualizacoes parciais
 - Componentes acessam store **apenas via facade**
 
 ---
 
-## 12. Testes — Jest + ng-mocks
+## 9. UI — PrimeNG + Tailwind CSS
+
+### PrimeNG — Componentes interativos
+
+- **Imports granulares** obrigatorios
+- Styled mode com `definePreset()` + CSS Layer
+- Usar PrimeNG para: tabelas, dialogs, selects, calendars, toasts, menus, etc.
+
+```typescript
+// Correto
+import { ButtonModule } from 'primeng/button';
+import { TableModule } from 'primeng/table';
+
+// Proibido
+import { PrimeNGModule } from 'primeng';
+```
+
+### Tailwind CSS — Layout e estilizacao
+
+- Tailwind-first para layout, espacamento, responsividade
+- Tokens PrimeNG via plugin: `bg-primary`, `text-surface-900`, `text-muted-color`
+- SCSS por componente apenas para o que Tailwind nao cobre
+- Mobile-first com breakpoints (`sm:`, `md:`, `lg:`)
+- Resolver conflitos via CSS Layer — nunca `!important`
+
+### Proibido
+
+- PrimeFlex (deprecated)
+- `::ng-deep`
+- `!important`
+- Estilos fixos que quebram dark mode
+
+---
+
+## 10. Tema — Light/Dark
+
+- Suporte obrigatorio a light e dark
+- Tema global e consistente (shell, cards, tabelas, dialogs, textos)
+- Persistir preferencia do usuario (localStorage)
+- Configurar PrimeNG `darkModeSelector`
+- Priorizar tokens adaptativos: `text-color`, `text-muted-color`, `bg-surface-*`, `--p-*`
+
+---
+
+## 11. UX — Formularios, Tabelas e Feedback
+
+- Inputs com label claro e mensagens de validacao contextuais
+- Estados vazios com orientacao ao usuario
+- Acoes principais sempre visiveis
+- Nomes de botoes orientados a acao
+- CRUD: modal para criar/editar, confirmacao para excluir, feedback por toast
+- Listagens: `p-table` com paginacao e pesquisa quando fizer sentido
+- Layout mobile-first e responsivo
+
+---
+
+## 12. Rotas, Autenticacao e Autorizacao
+
+- Rotas de feature lazy-loaded
+- Guards funcionais para autenticacao e role
+- UI reflete permissao de rota — nao exibir links bloqueados
+- Navegacao agrupada por role quando aplicavel
+
+---
+
+## 13. Internacionalizacao — Transloco
+
+- Todo texto visivel ao usuario DEVE usar chaves de traducao — nunca hardcode
+- Chaves organizadas por feature: `examples.title`, `examples.actions.create`
+- Structural directive como padrao
+- Lazy load de translations por rota com `TRANSLOCO_SCOPE`
+- Labels de PrimeNG via Transloco
+
+```html
+<ng-container *transloco="let t">
+  <h1>{{ t('examples.title') }}</h1>
+  <p-button [label]="t('examples.actions.create')" icon="pi pi-plus" />
+  <input pInputText [placeholder]="t('examples.search.placeholder')" />
+</ng-container>
+```
+
+```
+src/assets/i18n/
+├── pt-BR.json
+├── en.json
+├── examples/
+│   ├── pt-BR.json
+│   └── en.json
+```
+
+---
+
+## 14. Importacoes e Aliases — tsconfig paths
+
+- **Sempre usar aliases do tsconfig** — nunca caminhos relativos longos
+- Manter padrao consistente entre features
+
+```typescript
+// Correto
+import { ExampleService } from '@features/examples/services/example.service';
+import { AuthGuard } from '@core/guards/auth.guard';
+import { LoadingComponent } from '@shared/components/loading/loading.component';
+
+// Proibido
+import { ExampleService } from '../../../features/examples/services/example.service';
+```
+
+Aliases padrao: `@app/*`, `@shared/*`, `@core/*`, `@features/*`, `@auth/*`, `@env/*`
+
+---
+
+## 15. Qualidade de Codigo
+
+- Nunca usar `any` (exceto caso excepcional e justificado)
+- Tipos explicitos em modelos e payloads
+- Nomes claros e consistentes
+- Comentarios apenas para explicar **intencao** — nunca o obvio
+- Tratar erro de rede e estados de carregamento
+- Evitar duplicacao de logica
+
+---
+
+## 16. Performance
+
+- `OnPush` em tudo
+- `track` em todo `@for`
+- `@defer` para conteudo pesado
+- Lazy loading de features e translations
+- `computed()` em vez de funcoes no template
+- Imports granulares de PrimeNG
+- Tailwind purge configurado
+- Evitar bindings desnecessarios em cadeia
+- Em listas grandes, considerar virtualizacao/paginacao
+
+---
+
+## 17. Testes — Jest + ng-mocks
 
 ### Ferramentas
 
-| Ferramenta       | Uso                                                 |
-| ---------------- | --------------------------------------------------- |
-| `MockBuilder`    | Configura TestBed com shallow rendering automático  |
-| `MockRender`     | Renderiza componente com inputs tipados             |
-| `MockComponent`  | Mock de componente preservando interface            |
-| `MockProvider`   | Mock de serviço com `jest.fn()` em todos os métodos |
-| `ngMocks.find`   | Query tipada para elementos e componentes           |
-| `ngMocks.output` | Acessa output de componente mockado                 |
+| Ferramenta       | Uso                                       |
+| ---------------- | ----------------------------------------- |
+| `MockBuilder`    | Setup de TestBed com shallow rendering    |
+| `MockRender`     | Renderiza componente com inputs tipados   |
+| `MockComponent`  | Mock de componente preservando interface  |
+| `MockProvider`   | Mock de servico com `jest.fn()`           |
+| `ngMocks.find`   | Query tipada para elementos e componentes |
+| `ngMocks.output` | Acessa output de componente mockado       |
 
-### Padrão: Testando Componente com Facade
+### Regras
+
+- ng-mocks obrigatorio — nunca mock manual de componente
+- `MockBuilder` como padrao para setup
+- `MockProvider` para servicos
+- `data-testid` para seletores — nunca acoplar a classes CSS
+- Testar comportamento, nao implementacao
+- HTTP: `provideHttpClientTesting()` + `HttpTestingController`
+- Arquivo de teste ao lado do fonte: `*.spec.ts`
+- Cobrir cenarios de sucesso e falha
+
+### Componente com Facade
 
 ```typescript
-describe('QuotesListComponent', () => {
-  beforeEach(() => {
-    return MockBuilder(QuotesListComponent).provide(
-      MockProvider(QuotesFacade, {
-        quotes: signal([mockQuote]),
+describe('ItemsListComponent', () => {
+  beforeEach(() =>
+    MockBuilder(ItemsListComponent).provide(
+      MockProvider(ItemsFacade, {
+        items: signal([mockItem]),
         isLoading: signal(false),
-        loadQuotes: jest.fn(),
-        deleteQuote: jest.fn(),
+        load: jest.fn(),
+        delete: jest.fn(),
       }),
-    );
+    ),
+  );
+
+  it('deve renderizar itens', () => {
+    MockRender(ItemsListComponent);
+    expect(ngMocks.findAll('[data-testid="item-card"]').length).toBe(1);
   });
 
-  it('deve renderizar cotações', () => {
-    const fixture = MockRender(QuotesListComponent);
-    expect(ngMocks.findAll('app-quote-card').length).toBe(1);
-  });
-
-  it('deve chamar loadQuotes no init', () => {
-    MockRender(QuotesListComponent);
-    expect(ngMocks.findInstance(QuotesFacade).loadQuotes).toHaveBeenCalled();
+  it('deve chamar load no init', () => {
+    MockRender(ItemsListComponent);
+    expect(ngMocks.findInstance(ItemsFacade).load).toHaveBeenCalled();
   });
 });
 ```
 
-### Padrão: Testando Facade
+### Facade
 
 ```typescript
-describe('QuotesFacade', () => {
+describe('ItemsFacade', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       providers: [
-        QuotesFacade,
-        MockProvider(QuoteService),
+        ItemsFacade,
+        MockProvider(ItemService),
         MockProvider(MessageService),
-        MockProvider(QuotesStore, {
-          filteredQuotes: signal([]),
+        MockProvider(ItemsStore, {
+          filteredItems: signal([]),
           loading: signal(false),
           load: jest.fn(),
         }),
@@ -302,135 +395,136 @@ describe('QuotesFacade', () => {
   });
 
   it('deve delegar load para store', () => {
-    const facade = TestBed.inject(QuotesFacade);
-    facade.loadQuotes();
-    expect(TestBed.inject(QuotesStore).load).toHaveBeenCalled();
+    const facade = TestBed.inject(ItemsFacade);
+    facade.load();
+    expect(TestBed.inject(ItemsStore).load).toHaveBeenCalled();
   });
 });
 ```
 
-### Padrão: Testando Serviço HTTP
+### Servico HTTP
 
 ```typescript
-describe('QuoteService', () => {
+describe('ItemService', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [QuoteService, provideHttpClient(), provideHttpClientTesting()],
+      providers: [ItemService, provideHttpClient(), provideHttpClientTesting()],
     });
   });
 
-  it('GET /api/quotes', () => {
-    const service = TestBed.inject(QuoteService);
+  it('GET /api/items', () => {
+    const service = TestBed.inject(ItemService);
     const httpMock = TestBed.inject(HttpTestingController);
 
-    service.getAll().subscribe((quotes) => expect(quotes).toEqual([mockQuote]));
+    service.getAll().subscribe((items) => expect(items).toEqual([mockItem]));
 
-    const req = httpMock.expectOne('/api/quotes');
+    const req = httpMock.expectOne('/api/items');
     expect(req.request.method).toBe('GET');
-    req.flush([mockQuote]);
+    req.flush([mockItem]);
   });
 });
 ```
 
-### Regras de Testes
+---
 
-- **ng-mocks obrigatório** — nunca mock classes manuais para componentes
-- **`MockBuilder`** como padrão para setup de TestBed
-- **`MockProvider`** para serviços — cria mocks com `jest.fn()`
-- **`data-testid`** para seletores — nunca acoplar a classes CSS
-- Testar **comportamento**, não implementação
-- HTTP: usar `provideHttpClientTesting()` + `HttpTestingController`
-- Arquivo de teste ao lado do fonte: `*.spec.ts`
+## 18. Naming Conventions
+
+| Artefato    | Arquivo                  | Classe/Funcao              |
+| ----------- | ------------------------ | -------------------------- |
+| Component   | `user-card.component.ts` | `UserCardComponent`        |
+| Service     | `example.service.ts`     | `ExampleService`           |
+| Facade      | `examples.facade.ts`     | `ExamplesFacade`           |
+| Store       | `examples.store.ts`      | `ExamplesStore`            |
+| Guard       | `auth.guard.ts`          | `authGuard`                |
+| Interceptor | `error.interceptor.ts`   | `errorInterceptor`         |
+| Model       | `example.model.ts`       | `Example`, `ExampleStatus` |
+| Translation | `feature.section.key`    | `examples.actions.create`  |
+
+- Arquivos em kebab-case
+- Classes em PascalCase
+- Constantes globais em UPPER_SNAKE_CASE
 
 ---
 
-## 13. Naming Conventions
-
-| Artefato    | Arquivo                  | Classe/Função           |
-| ----------- | ------------------------ | ----------------------- |
-| Component   | `user-card.component.ts` | `UserCardComponent`     |
-| Service     | `quote.service.ts`       | `QuoteService`          |
-| Facade      | `quotes.facade.ts`       | `QuotesFacade`          |
-| Store       | `quotes.store.ts`        | `QuotesStore`           |
-| Guard       | `auth.guard.ts`          | `authGuard`             |
-| Interceptor | `error.interceptor.ts`   | `errorInterceptor`      |
-| Model       | `quote.model.ts`         | `Quote`, `QuoteStatus`  |
-| Translation | `feature.section.key`    | `quotes.actions.create` |
-
----
-
-## 14. Performance
-
-- `OnPush` em tudo
-- `track` em todo `@for`
-- `@defer` para conteúdo pesado
-- Lazy loading de features e translations
-- `computed()` em vez de funções no template
-- Imports granulares de PrimeNG
-- Tailwind purge configurado
-
----
-
-## Anti-Patterns — Nunca Fazer
+## 19. Anti-Patterns — Proibido
 
 ```typescript
-// ❌ Componente acessando store diretamente
-private readonly store = inject(QuotesStore); // no componente
+// Componente acessando store direto
+private readonly store = inject(ExamplesStore); // no componente
 
-// ❌ subscribe() manual
+// subscribe() manual em componente
 ngOnInit() {
   this.service.getData().subscribe(data => this.data = data);
 }
 
-// ❌ Função no template
+// Promise / async await para fluxo de dados
+async loadData() { this.data = await firstValueFrom(this.api.get()); }
+
+// Funcao no template
 <div>{{ getFullName() }}</div>
 
-// ❌ any
+// any
 getData(): any { }
 
-// ❌ ChangeDetectionStrategy.Default
+// Sem ChangeDetection
 @Component({ /* sem changeDetection */ })
 
-// ❌ Constructor injection
+// Constructor injection
 constructor(private service: MyService) {}
 
-// ❌ String hardcoded
-<h1>Cotações</h1>
+// String hardcoded
+<h1>Cotacoes</h1>
 <p-button label="Salvar" />
 
-// ❌ PrimeFlex
+// PrimeFlex
 <div class="p-grid p-col-6">
 
-// ❌ ::ng-deep
+// ::ng-deep
 :host ::ng-deep .p-button { background: red; }
 
-// ❌ Mock manual de componente
+// Mock manual de componente
 @Component({ selector: 'app-child', template: '' })
 class MockChildComponent {}
 
-// ❌ Import genérico de PrimeNG
+// Import generico PrimeNG
 import { PrimeNGModule } from 'primeng';
+
+// Caminhos relativos longos
+import { X } from '../../../shared/utils/x';
+
+// NgModule
+@NgModule({ declarations: [MyComponent] })
+
+// Diretivas estruturais legadas
+<div *ngIf="x"> / <div *ngFor="let i of items">
+
+// Tela monolitica sem componentizacao
+// Componente com 500+ linhas sem separacao
+
+// Usar contexto de outros projetos/conversas como exemplo
 ```
 
 ---
 
-## Prioridades de Decisão
+## 20. Componentizacao Obrigatoria
 
-1. **Correção** — funciona corretamente
-2. **Legibilidade** — outro dev entende sem explicação
-3. **Manutenibilidade** — fácil de modificar
-4. **Performance** — otimizado onde importa
-5. **DRY** — sem duplicação
+- Toda tela deve ser composta por componentes menores e especificos
+- Extrair blocos logicos em componentes dumb com `input()` e `output()`
+- Container orquestra — componentes apresentam
+- Se um componente ultrapassa ~150 linhas de template, dividir
+- Cada componente deve ter uma unica responsabilidade clara
 
 ---
 
-## Referências
+## 21. Checklist Pre-Merge
 
-- [Angular Signals](https://angular.dev/guide/signals)
-- [Angular Zoneless](https://angular.dev/guide/zoneless)
-- [NgRx Signal Store](https://ngrx.io/guide/signals)
-- [PrimeNG](https://primeng.org)
-- [PrimeNG + Tailwind](https://primeng.org/tailwind)
-- [Tailwind CSS](https://tailwindcss.com/docs)
-- [Transloco](https://jsverse.gitbook.io/transloco)
-- [ng-mocks](https://ng-mocks.sudo.eu)
+- [ ] Build compila sem erro
+- [ ] Linter sem novos erros
+- [ ] Rotas e permissao coerentes
+- [ ] Light/dark consistente
+- [ ] Validacoes e toasts adequados
+- [ ] Componentes com responsabilidade clara e bem separados
+- [ ] Aliases do tsconfig utilizados
+- [ ] Testes unitarios adicionados/atualizados
+- [ ] Sem `any`, sem `subscribe()` manual em componente
+- [ ] Sem strings hardcoded — usando Transloco

@@ -1,0 +1,143 @@
+<app-page-header titleKey="painel.pageTitle" subtitleKey="painel.subtitle" />
+
+<div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+  <p-card>
+    <div class="text-sm text-muted-color">{{ 'painel.kpi.alunos' | transloco }}</div>
+    <div class="text-2xl font-semibold">{{ facade.totalAlunos() }}</div>
+  </p-card>
+  <p-card>
+    <div class="text-sm text-muted-color">{{ 'painel.kpi.mediaNotas' | transloco }}</div>
+    <div class="text-2xl font-semibold">{{ facade.mediaGeralNotas() }}</div>
+  </p-card>
+  <p-card>
+    <div class="text-sm text-muted-color">{{ 'painel.kpi.freq' | transloco }}</div>
+    <div class="text-2xl font-semibold">{{ facade.frequenciaMedia() }}%</div>
+  </p-card>
+  <p-card>
+    <div class="text-sm text-muted-color">{{ 'painel.kpi.aprovacao' | transloco }}</div>
+    <div class="text-2xl font-semibold">{{ facade.taxaAprovacao() }}%</div>
+  </p-card>
+  <p-card>
+    <div class="text-sm text-muted-color">{{ 'painel.kpi.intervencoes' | transloco }}</div>
+    <div class="text-2xl font-semibold">{{ facade.totalIntervencoesAbertas() }}</div>
+  </p-card>
+</div>
+
+<p-tabs value="0">
+  <p-tablist>
+    <p-tab value="0">{{ 'painel.tab.byTurma' | transloco }}</p-tab>
+    <p-tab value="1">{{ 'painel.tab.byAno' | transloco }}</p-tab>
+    <p-tab value="2">{{ 'painel.tab.gradesTrend' | transloco }}</p-tab>
+    <p-tab value="3">{{ 'painel.tab.freqTrend' | transloco }}</p-tab>
+  </p-tablist>
+
+  <p-tabpanels>
+    <p-tabpanel value="0">
+      <p-card styleClass="app-panel-border">
+        <p-table
+          [value]="facade.turmaRows()"
+          [loading]="facade.loading()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          responsiveLayout="scroll"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'painel.col.turma' | transloco }}</th>
+              <th>{{ 'painel.col.students' | transloco }}</th>
+              <th>{{ 'painel.col.media' | transloco }}</th>
+              <th>{{ 'painel.col.freq' | transloco }}</th>
+              <th>{{ 'painel.col.aprovacao' | transloco }}</th>
+              <th>{{ 'painel.col.intervencoesAbertas' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.turmaNome }}</td>
+              <td>{{ row.alunos }}</td>
+              <td>{{ row.mediaNotas }}</td>
+              <td>{{ row.frequencia }}%</td>
+              <td>{{ row.aprovacao }}%</td>
+              <td>{{ row.intervencoesAbertas }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </p-tabpanel>
+
+    <p-tabpanel value="1">
+      <p-card styleClass="app-panel-border">
+        <p-table
+          [value]="facade.anoRows()"
+          [loading]="facade.loading()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          responsiveLayout="scroll"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'painel.col.ano' | transloco }}</th>
+              <th>{{ 'painel.col.turmas' | transloco }}</th>
+              <th>{{ 'painel.col.students' | transloco }}</th>
+              <th>{{ 'painel.col.media' | transloco }}</th>
+              <th>{{ 'painel.col.freq' | transloco }}</th>
+              <th>{{ 'painel.col.aprovacao' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.ano }}</td>
+              <td>{{ row.turmas }}</td>
+              <td>{{ row.alunos }}</td>
+              <td>{{ row.mediaNotas }}</td>
+              <td>{{ row.frequencia }}%</td>
+              <td>{{ row.aprovacao }}%</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </p-tabpanel>
+
+    <p-tabpanel value="2">
+      <p-card styleClass="app-panel-border">
+        <p-table [value]="facade.bimestreRows()" [loading]="facade.loading()" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'painel.col.bimestre' | transloco }}</th>
+              <th>{{ 'painel.col.mediaNotas' | transloco }}</th>
+              <th>{{ 'painel.col.lancamentos' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.bimestre }}</td>
+              <td>{{ row.mediaNotas }}</td>
+              <td>{{ row.totalLancamentos }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </p-tabpanel>
+
+    <p-tabpanel value="3">
+      <p-card styleClass="app-panel-border">
+        <p-table [value]="facade.mesRows()" [loading]="facade.loading()" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'painel.col.mes' | transloco }}</th>
+              <th>{{ 'painel.col.freqMedia' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.mes }}</td>
+              <td>{{ row.frequencia }}%</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>

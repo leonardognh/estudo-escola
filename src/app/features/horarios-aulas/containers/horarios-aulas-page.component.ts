@@ -1,6 +1,8 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
@@ -9,8 +11,8 @@ import { TabsModule } from 'primeng/tabs';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { startWith } from 'rxjs';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { map, startWith } from 'rxjs';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { TableSearchComponent } from '@shared/components/table-search/table-search.component';
 import { FormActionsComponent } from '@shared/components/form-actions/form-actions.component';
@@ -24,6 +26,7 @@ import { DIA_SEMANA_OPTIONS, HorarioAula } from '@calendario/models/horario-aula
   imports: [
     ReactiveFormsModule,
     ButtonModule,
+    TooltipModule,
     CardModule,
     SelectModule,
     InputTextModule,
@@ -31,6 +34,7 @@ import { DIA_SEMANA_OPTIONS, HorarioAula } from '@calendario/models/horario-aula
     TabsModule,
     DialogModule,
     ConfirmDialogModule,
+    TranslocoPipe,
     PageHeaderComponent,
     TableSearchComponent,
     FormActionsComponent,
@@ -43,16 +47,29 @@ export class HorariosAulasPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(CalendarioFacade);
   protected readonly editingId = signal<string | null>(null);
   protected readonly quickTurmaFilterId = signal<string | null>(null);
   protected readonly modalVisible = signal(false);
-  protected readonly diaSemanaOptions = [...DIA_SEMANA_OPTIONS];
+
+  private readonly langTick = toSignal(
+    this.transloco.langChanges$.pipe(map(() => this.transloco.getActiveLang())),
+    { initialValue: this.transloco.getActiveLang() },
+  );
+
+  protected readonly diaSemanaOptions = computed(() => {
+    this.langTick();
+    return DIA_SEMANA_OPTIONS.map((o) => ({
+      value: o.value,
+      label: this.transloco.translate('weekdays.' + o.value),
+    }));
+  });
 
   protected readonly form = this.formBuilder.nonNullable.group({
     turmaId: ['', [Validators.required]],
     materiaPorAnoId: ['', [Validators.required]],
-    diaSemana: [this.diaSemanaOptions[0]?.value ?? 'segunda', [Validators.required]],
+    diaSemana: [DIA_SEMANA_OPTIONS[0]?.value ?? 'segunda', [Validators.required]],
     horaInicio: ['08:00', [Validators.required]],
     horaFim: ['09:00', [Validators.required]],
   });
@@ -61,12 +78,19 @@ export class HorariosAulasPageComponent {
     { initialValue: this.form.controls.turmaId.value },
   );
 
-  protected readonly turmasOptions = computed(() =>
-    this.facade.turmas().map((turma) => ({
-      label: `${turma.ano} ${turma.nome} (${this.facade.getPeriodoById(turma.periodoId)?.nome ?? 'Periodo'})`,
+  protected readonly turmasOptions = computed(() => {
+    this.langTick();
+    return this.facade.turmas().map((turma) => ({
+      label: this.transloco.translate('horarios.turmaOption', {
+        ano: turma.ano,
+        nome: turma.nome,
+        periodo:
+          this.facade.getPeriodoById(turma.periodoId)?.nome ??
+          this.transloco.translate('horarios.fallback.period'),
+      }),
       value: turma.id,
-    })),
-  );
+    }));
+  });
   protected readonly selectedTurmaPeriodo = computed(() => {
     const turma = this.facade.getTurmaById(this.turmaIdSignal());
     if (!turma) {
@@ -84,6 +108,7 @@ export class HorariosAulasPageComponent {
   });
 
   protected readonly materiasPorAnoForSelectedTurma = computed(() => {
+    this.langTick();
     const turma = this.facade.getTurmaById(this.turmaIdSignal());
     if (!turma) {
       return [];
@@ -93,7 +118,7 @@ export class HorariosAulasPageComponent {
       .materiasPorAno()
       .filter((item) => item.ano === turma.ano)
       .map((item) => ({
-        label: this.facade.getMateriaById(item.materiaId)?.nome ?? 'Materia',
+        label: this.facade.getMateriaById(item.materiaId)?.nome ?? this.transloco.translate('horarios.fallback.subject'),
         value: item.id,
       }));
   });
@@ -103,6 +128,15 @@ export class HorariosAulasPageComponent {
       return this.facade.horariosAulas();
     }
     return this.facade.horariosAulas().filter((horario) => horario.turmaId === turmaId);
+  });
+
+  protected readonly horariosTableRows = computed(() => {
+    this.langTick();
+    return this.horariosFiltrados().map((horario) => ({
+      ...horario,
+      descricao: this.buildDescribeHorario(horario),
+      diaSemanaLabel: this.transloco.translate('weekdays.' + horario.diaSemana),
+    }));
   });
   protected readonly weekHourColumns = computed(() => {
     const periodo = this.quickFilterTurmaPeriodo();
@@ -123,14 +157,11 @@ export class HorariosAulasPageComponent {
     return columns;
   });
   protected readonly weekRows = computed(() => {
-    const dias = [
-      { key: 'segunda', label: 'Segunda' },
-      { key: 'terca', label: 'Terca' },
-      { key: 'quarta', label: 'Quarta' },
-      { key: 'quinta', label: 'Quinta' },
-      { key: 'sexta', label: 'Sexta' },
-      { key: 'sabado', label: 'Sabado' },
-    ] as const;
+    this.langTick();
+    const dias = DIA_SEMANA_OPTIONS.filter((d) => d.value !== 'domingo').map((d) => ({
+      key: d.value,
+      label: this.transloco.translate('weekdays.' + d.value),
+    }));
 
     return dias.map((dia) => {
       const cells = this.weekHourColumns().map((hour) => {
@@ -142,7 +173,7 @@ export class HorariosAulasPageComponent {
             const turma = this.facade.getTurmaById(item.turmaId);
             return {
               id: item.id,
-              titulo: materia?.nome ?? 'Materia',
+              titulo: materia?.nome ?? this.transloco.translate('horarios.fallback.subject'),
               subtitulo: turma ? `${turma.ano} ${turma.nome}` : '',
               horario: `${item.horaInicio}-${item.horaFim}`,
             };
@@ -158,7 +189,11 @@ export class HorariosAulasPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
   }
@@ -173,8 +208,8 @@ export class HorariosAulasPageComponent {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha os campos obrigatorios corretamente.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('validation.fillFields'),
       });
       return;
     }
@@ -182,31 +217,30 @@ export class HorariosAulasPageComponent {
     const payload = this.form.getRawValue();
     const periodo = this.selectedTurmaPeriodo();
     if (!periodo) {
-      this.facade.errorMessage.set('Turma sem periodo valido.');
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Selecione uma turma com periodo valido.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('horarios.validation.selectTurmaComPeriodo'),
       });
       return;
     }
     if (payload.horaInicio >= payload.horaFim) {
-      this.facade.errorMessage.set('Hora de inicio deve ser menor que hora de fim.');
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Hora de inicio deve ser menor que hora de fim.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('horarios.validation.horaInicioMenorFim'),
       });
       return;
     }
     if (payload.horaInicio < periodo.horaInicio || payload.horaFim > periodo.horaFim) {
-      this.facade.errorMessage.set(
-        `Horario deve respeitar o periodo ${periodo.nome} (${periodo.horaInicio}-${periodo.horaFim}).`,
-      );
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Horario fora do periodo da turma.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('horarios.validation.respeitarPeriodo', {
+          nome: periodo.nome,
+          inicio: periodo.horaInicio,
+          fim: periodo.horaFim,
+        }),
       });
       return;
     }
@@ -214,8 +248,8 @@ export class HorariosAulasPageComponent {
     this.facade.saveHorarioAula(this.editingId(), payload);
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: this.editingId() ? 'Horario atualizado.' : 'Horario cadastrado.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate(this.editingId() ? 'horarios.toast.updated' : 'horarios.toast.created'),
     });
     this.cancelEdit();
   }
@@ -238,7 +272,7 @@ export class HorariosAulasPageComponent {
     this.form.reset({
       turmaId: '',
       materiaPorAnoId: '',
-      diaSemana: this.diaSemanaOptions[0]?.value ?? 'segunda',
+      diaSemana: DIA_SEMANA_OPTIONS[0]?.value ?? 'segunda',
       horaInicio: '08:00',
       horaFim: '09:00',
     });
@@ -246,17 +280,17 @@ export class HorariosAulasPageComponent {
 
   protected remove(id: string): void {
     this.confirmationService.confirm({
-      header: 'Confirmar remocao',
-      message: 'Deseja remover este horario?',
-      acceptLabel: 'Remover',
-      rejectLabel: 'Cancelar',
+      header: this.transloco.translate('common.confirmRemoveTitle'),
+      message: this.transloco.translate('horarios.confirm.message'),
+      acceptLabel: this.transloco.translate('common.remove'),
+      rejectLabel: this.transloco.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.facade.removeHorarioAula(id);
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Horario removido.',
+          summary: this.transloco.translate('common.success'),
+          detail: this.transloco.translate('horarios.toast.removed'),
         });
       },
     });
@@ -266,16 +300,24 @@ export class HorariosAulasPageComponent {
     this.quickTurmaFilterId.set(this.quickTurmaFilterId() === turmaId ? null : turmaId);
   }
 
-  protected describeHorario(horario: HorarioAula): string {
+  private buildDescribeHorario(horario: HorarioAula): string {
+    this.langTick();
     const turma = this.facade.getTurmaById(horario.turmaId);
     const materiaPorAno = this.facade.getMateriaPorAnoById(horario.materiaPorAnoId);
     if (!turma || !materiaPorAno) {
-      return 'Horario incompleto';
+      return this.transloco.translate('horarios.incomplete');
     }
 
     const materia = this.facade.getMateriaById(materiaPorAno.materiaId);
     const principal = this.facade.getProfessorById(materiaPorAno.professorPrincipalId);
     const periodo = this.facade.getPeriodoById(turma.periodoId);
-    return `${turma.ano} ${turma.nome} (${periodo?.nome ?? 'Periodo'}) - ${materia?.nome ?? 'Materia'} - ${horario.horaInicio}-${horario.horaFim} - Prof. ${principal?.nome ?? '-'}`;
+    return this.transloco.translate('horarios.describe', {
+      turma: `${turma.ano} ${turma.nome}`,
+      periodo: periodo?.nome ?? this.transloco.translate('horarios.fallback.period'),
+      materia: materia?.nome ?? this.transloco.translate('horarios.fallback.subject'),
+      horas: `${horario.horaInicio}-${horario.horaFim}`,
+      profLabel: this.transloco.translate('horarios.profLabel'),
+      professor: principal?.nome ?? '-',
+    });
   }
 }

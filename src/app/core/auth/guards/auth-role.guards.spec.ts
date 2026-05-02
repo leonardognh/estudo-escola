@@ -7,13 +7,15 @@ import { roleGuard } from '@auth/guards/role.guard';
 import { AuthService } from '@auth/services/auth.service';
 import { AuthUser } from '@auth/models/auth-user.model';
 
-const createUser = (role: 'admin' | 'professor'): AuthUser => ({
+const createUser = (role: AuthUser['role']): AuthUser => ({
   id: 'u1',
   nome: 'User',
   email: 'user@escola.com',
   senha: '1234',
   role,
   professorId: null,
+  alunoId: null,
+  responsavelId: null,
 });
 
 describe('auth and role guards', () => {

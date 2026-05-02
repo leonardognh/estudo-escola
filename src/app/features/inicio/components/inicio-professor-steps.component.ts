@@ -14,27 +14,27 @@ export class InicioProfessorStepsComponent {
   protected readonly steps = [
     {
       title: '1. Consulte sua agenda da semana',
-      description: 'Confira horarios e planejamento antes das aulas para evitar conflitos.',
+      description: 'Confira horários e planejamento antes das aulas para evitar conflitos.',
       links: [
-        { label: 'Ir para Horarios', path: '/horarios-aulas' },
-        { label: 'Ir para Calendario', path: '/calendario' },
+        { label: 'Ir para Horários', path: '/horarios-aulas' },
+        { label: 'Ir para Calendário', path: '/calendario' },
       ],
     },
     {
-      title: '2. Lance presencas por aula',
-      description: 'Registre a frequencia no dia da aula e acompanhe o consolidado semanal.',
-      links: [{ label: 'Ir para Presencas', path: '/presencas' }],
+      title: '2. Lance presenças por aula',
+      description: 'Registre a frequência no dia da aula e acompanhe o consolidado semanal.',
+      links: [{ label: 'Ir para Presenças', path: '/presencas' }],
     },
     {
-      title: '3. Cadastre atividades e avaliacoes',
-      description: 'Organize evidencias por aluno, materia e periodo para gerar notas com seguranca.',
+      title: '3. Cadastre atividades e avaliações',
+      description: 'Organize evidências por aluno, matéria e período para gerar notas com segurança.',
       links: [
         { label: 'Ir para Atividades', path: '/atividades' },
         { label: 'Ir para Notas', path: '/notas' },
       ],
     },
     {
-      title: '4. Acompanhe progresso academico',
+      title: '4. Acompanhe progresso acadêmico',
       description: 'Use filtros do boletim para comparar desempenho por aluno e bimestre.',
       links: [{ label: 'Ir para Boletim', path: '/notas' }],
     },

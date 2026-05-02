@@ -4,6 +4,13 @@
 @import 'tailwindcss-primeui';
 @import 'primeicons/primeicons.css';
 
+/* Shell: botões só-mobile (ex.: fechar drawer) — evita `md:hidden` perdendo para estilos do p-button */
+@media (min-width: 768px) {
+  .app-shell-mobile-only {
+    display: none !important;
+  }
+}
+
 html,
 body {
   min-height: 100%;
@@ -88,4 +95,73 @@ body {
 
 .app-dark .p-datatable .p-datatable-tbody > tr > td {
   border-bottom-color: var(--p-surface-700);
+}
+
+/* Região com rolagem horizontal segura em telas estreitas (tabelas largas) */
+.app-table-scroll-region {
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile: rolagem horizontal em todas as tabelas PrimeNG (p-table) */
+@media (max-width: 767px) {
+  .p-datatable-table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .p-datatable .p-datatable-table {
+    width: max-content;
+    min-width: 100%;
+  }
+}
+
+/* Modais: limitar altura, rolagem no conteúdo e evitar campos estourando a largura */
+.p-dialog {
+  box-sizing: border-box;
+  max-width: calc(100vw - 1rem);
+}
+
+.p-dialog .p-dialog-content {
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  max-height: min(78vh, 42rem);
+  -webkit-overflow-scrolling: touch;
+}
+
+.p-dialog-content form {
+  min-width: 0;
+}
+
+.p-dialog-content .grid {
+  min-width: 0;
+}
+
+.p-dialog-content .grid > label,
+.p-dialog-content .grid > div {
+  min-width: 0;
+}
+
+.p-dialog-content input.p-inputtext,
+.p-dialog-content textarea {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.p-dialog-content .p-select,
+.p-dialog-content .p-multiselect,
+.p-dialog-content .p-datepicker,
+.p-dialog-content .p-inputnumber {
+  max-width: 100%;
+}
+
+@media (max-width: 767px) {
+  .p-dialog .p-dialog-content {
+    max-height: min(72vh, 36rem);
+  }
 }

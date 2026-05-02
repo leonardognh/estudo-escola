@@ -9,6 +9,7 @@ import { AlunosService } from '@alunos/services/alunos.service';
 import { Aluno } from '@alunos/models/aluno.model';
 import { MateriasService } from '@materias/services/materias.service';
 import { Materia, MateriaPorAno } from '@materias/models/materia.model';
+import { RoleScopeService } from '@auth/services/role-scope.service';
 
 @Injectable()
 export class NotasFacade {
@@ -16,6 +17,7 @@ export class NotasFacade {
   private readonly turmasService = inject(TurmasService);
   private readonly alunosService = inject(AlunosService);
   private readonly materiasService = inject(MateriasService);
+  private readonly roleScopeService = inject(RoleScopeService);
 
   readonly notas = signal<Nota[]>([]);
   readonly turmas = signal<Turma[]>([]);
@@ -44,14 +46,21 @@ export class NotasFacade {
     ])
       .pipe(
         tap(([notas, turmas, alunos, materias, materiasPorAno]) => {
-          this.notas.set(notas);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
+          const scoped = this.roleScopeService.applyScope({
+            notas,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+          });
+          this.notas.set(scoped.notas ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar dados de notas.');
+          this.errorMessage.set('errors.notas.load');
           return of([[], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -75,14 +84,21 @@ export class NotasFacade {
           ]),
         ),
         tap(([notas, turmas, alunos, materias, materiasPorAno]) => {
-          this.notas.set(notas);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
+          const scoped = this.roleScopeService.applyScope({
+            notas,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+          });
+          this.notas.set(scoped.notas ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar nota.');
+          this.errorMessage.set('errors.notas.save');
           return of([[], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -107,14 +123,21 @@ export class NotasFacade {
           ]),
         ),
         tap(([notas, turmas, alunos, materias, materiasPorAno]) => {
-          this.notas.set(notas);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
+          const scoped = this.roleScopeService.applyScope({
+            notas,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+          });
+          this.notas.set(scoped.notas ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover nota.');
+          this.errorMessage.set('errors.notas.remove');
           return of([[], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),

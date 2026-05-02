@@ -1,0 +1,378 @@
+<p-confirmdialog />
+
+<app-page-header
+  titleKey="intervencoes.pageTitle"
+  subtitleKey="intervencoes.subtitle"
+/>
+
+<p-tabs value="0">
+  <p-tablist>
+    <p-tab value="0">{{ 'intervencoes.tab.plano' | transloco }}</p-tab>
+    <p-tab value="1">{{ 'intervencoes.tab.recuperacoes' | transloco }}</p-tab>
+  </p-tablist>
+
+  <p-tabpanels>
+    <p-tabpanel value="0">
+      <p-card styleClass="app-panel-border">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <app-table-search
+            class="min-w-0 flex-1"
+            placeholderKey="intervencoes.searchPlano"
+            (searchChange)="searchIntervencoes.set($event)"
+          />
+          <p-button
+            class="w-full shrink-0 sm:w-auto"
+            [label]="'intervencoes.btn.newIntervencao' | transloco"
+            icon="pi pi-plus"
+            (onClick)="openCreateModal()"
+          />
+        </div>
+
+        <p-table
+          [value]="intervencoesRows()"
+          [loading]="facade.loading()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          dataKey="id"
+          styleClass="mt-4"
+          responsiveLayout="scroll"
+          [tableStyle]="{ 'min-width': '720px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'notas.col.aluno' | transloco }}</th>
+              <th>{{ 'intervencoes.field.turma' | transloco }}</th>
+              <th>{{ 'intervencoes.field.materia' | transloco }}</th>
+              <th>{{ 'intervencoes.field.bimestre' | transloco }}</th>
+              <th>{{ 'intervencoes.table.risco' | transloco }}</th>
+              <th>{{ 'intervencoes.table.status' | transloco }}</th>
+              <th class="min-w-[7.5rem] sm:w-40">{{ 'alunos.col.actions' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.alunoNome }}</td>
+              <td>{{ row.turmaNome }}</td>
+              <td>{{ row.materiaNome }}</td>
+              <td>{{ row.bimestreLabel }}</td>
+              <td>{{ row.riscoLabel }}</td>
+              <td>{{ row.statusLabel }}</td>
+              <td>
+                <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+                  <p-button
+                    icon="pi pi-pencil"
+                    size="small"
+                    severity="secondary"
+                    [text]="true"
+                    [pTooltip]="'common.edit' | transloco"
+                    tooltipPosition="top"
+                    (onClick)="startEdit(row)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    size="small"
+                    severity="danger"
+                    [text]="true"
+                    [pTooltip]="'common.remove' | transloco"
+                    tooltipPosition="top"
+                    (onClick)="confirmRemoveIntervencao(row.id)"
+                  />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </p-tabpanel>
+
+    <p-tabpanel value="1">
+      <p-card styleClass="app-panel-border">
+        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+          <app-table-search
+            class="min-w-0 flex-1"
+            placeholderKey="intervencoes.searchRecuperacoes"
+            (searchChange)="searchRecuperacoes.set($event)"
+          />
+          <p-button
+            class="w-full shrink-0 sm:w-auto"
+            [label]="'intervencoes.btn.simulacao' | transloco"
+            icon="pi pi-calculator"
+            (onClick)="openSimulacao()"
+          />
+        </div>
+
+        <p-table
+          [value]="recuperacoesRows()"
+          [loading]="facade.loading()"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          dataKey="id"
+          styleClass="mt-4"
+          responsiveLayout="scroll"
+          [tableStyle]="{ 'min-width': '800px' }"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'notas.col.aluno' | transloco }}</th>
+              <th>{{ 'intervencoes.field.turma' | transloco }}</th>
+              <th>{{ 'intervencoes.field.materia' | transloco }}</th>
+              <th>{{ 'intervencoes.field.bimestre' | transloco }}</th>
+              <th>{{ 'intervencoes.table.notaAtual' | transloco }}</th>
+              <th>{{ 'intervencoes.table.notaAlvo' | transloco }}</th>
+              <th>{{ 'intervencoes.table.notaNecessaria' | transloco }}</th>
+              <th>{{ 'intervencoes.table.status' | transloco }}</th>
+              <th class="min-w-[7.5rem] sm:w-40">{{ 'alunos.col.actions' | transloco }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.alunoNome }}</td>
+              <td>{{ row.turmaNome }}</td>
+              <td>{{ row.materiaNome }}</td>
+              <td>{{ row.bimestreLabel }}</td>
+              <td>{{ row.notaAtual }}</td>
+              <td>{{ row.notaAlvo }}</td>
+              <td>{{ row.notaNecessaria }}</td>
+              <td>{{ row.statusLabel }}</td>
+              <td>
+                <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+                  <p-button
+                    icon="pi pi-pencil"
+                    size="small"
+                    severity="secondary"
+                    [text]="true"
+                    [pTooltip]="'common.edit' | transloco"
+                    tooltipPosition="top"
+                    (onClick)="openSimulacao(row)"
+                  />
+                  <p-button
+                    icon="pi pi-trash"
+                    size="small"
+                    severity="danger"
+                    [text]="true"
+                    [pTooltip]="'common.remove' | transloco"
+                    tooltipPosition="top"
+                    (onClick)="confirmRemoveRecuperacao(row.id)"
+                  />
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
+<p-dialog
+  [visible]="modalVisible()"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '100%', maxWidth: 'min(40rem, calc(100vw - 1rem))' }"
+  [header]="(editingId() ? 'intervencoes.dialog.editIntervencao' : 'intervencoes.dialog.newIntervencao') | transloco"
+  (onHide)="cancelEdit()"
+>
+  <form
+    class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
+    [formGroup]="form"
+    (ngSubmit)="submitIntervencao()"
+  >
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.aluno' | transloco }}
+      <p-select
+        formControlName="alunoId"
+        [options]="alunosOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.turma' | transloco }}
+      <p-select
+        formControlName="turmaId"
+        [options]="turmasOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.materia' | transloco }}
+      <p-select
+        formControlName="materiaId"
+        [options]="materiasOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.bimestre' | transloco }}
+      <p-select
+        formControlName="bimestre"
+        [options]="bimestreOptionsDisplay()"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.risco' | transloco }}
+      <p-select
+        formControlName="risco"
+        [options]="riscoOptionsDisplay()"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.status' | transloco }}
+      <p-select
+        formControlName="status"
+        [options]="statusIntervencaoOptionsDisplay()"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color sm:col-span-2">
+      {{ 'intervencoes.field.objetivo' | transloco }}
+      <input pInputText formControlName="objetivo" class="w-full min-w-0" />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color sm:col-span-2">
+      {{ 'intervencoes.field.descricao' | transloco }}
+      <input pInputText formControlName="descricao" class="w-full min-w-0" />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.responsavel' | transloco }}
+      <input pInputText formControlName="responsavel" class="w-full min-w-0" />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.prazo' | transloco }}
+      <input pInputText type="date" formControlName="prazo" class="w-full min-w-0" />
+    </label>
+
+    <div class="min-w-0 sm:col-span-2">
+      <app-form-actions (cancel)="cancelEdit()" />
+    </div>
+  </form>
+</p-dialog>
+
+<p-dialog
+  [visible]="simulacaoVisible()"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '100%', maxWidth: 'min(36rem, calc(100vw - 1rem))' }"
+  [header]="
+    (currentRecuperacaoId() ? 'intervencoes.dialog.editRecuperacao' : 'intervencoes.dialog.newRecuperacao') | transloco
+  "
+  (onHide)="closeSimulacao()"
+>
+  <form
+    class="grid min-w-0 grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4"
+    [formGroup]="simulacaoForm"
+    (ngSubmit)="confirmarSimulacao()"
+  >
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.aluno' | transloco }}
+      <p-select
+        formControlName="alunoId"
+        [options]="alunosOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.turma' | transloco }}
+      <p-select
+        formControlName="turmaId"
+        [options]="turmasOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.materia' | transloco }}
+      <p-select
+        formControlName="materiaId"
+        [options]="materiasOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [filter]="true"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.bimestre' | transloco }}
+      <p-select
+        formControlName="bimestre"
+        [options]="bimestreOptionsDisplay()"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.notaAtual' | transloco }}
+      <input pInputText type="number" min="0" max="10" step="0.1" formControlName="notaAtual" class="w-full min-w-0" />
+    </label>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color">
+      {{ 'intervencoes.field.notaAlvo' | transloco }}
+      <input pInputText type="number" min="0" max="10" step="0.1" formControlName="notaAlvo" class="w-full min-w-0" />
+    </label>
+    <div class="min-w-0 rounded-lg border p-3 text-sm sm:col-span-2">
+      {{ 'intervencoes.simulacao.notaNecessariaHint' | transloco }}
+      <strong class="break-words">
+        {{
+          facade.simularNotaNecessaria(
+            simulacaoForm.controls.notaAtual.value,
+            simulacaoForm.controls.notaAlvo.value
+          )
+        }}
+      </strong>
+    </div>
+    <label class="flex min-w-0 flex-col gap-1 text-sm text-color sm:col-span-2">
+      {{ 'intervencoes.field.status' | transloco }}
+      <p-select
+        formControlName="status"
+        [options]="statusRecuperacaoOptionsDisplay()"
+        optionLabel="label"
+        optionValue="value"
+        [fluid]="true"
+        appendTo="body"
+      />
+    </label>
+    <div class="flex min-w-0 flex-col gap-2 sm:col-span-2 sm:flex-row sm:justify-end">
+      <p-button
+        class="w-full sm:w-auto"
+        type="button"
+        [label]="'common.cancel' | transloco"
+        severity="secondary"
+        [outlined]="true"
+        (onClick)="closeSimulacao()"
+      />
+      <p-button class="w-full sm:w-auto" [label]="'common.confirmAction' | transloco" type="submit" />
+    </div>
+  </form>
+</p-dialog>

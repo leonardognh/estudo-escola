@@ -1,11 +1,11 @@
 <section class="space-y-4">
   <p-confirmdialog />
-  <app-page-header title="Atividades" actionLabel="Nova atividade" (action)="openCreateModal()" />
+  <app-page-header titleKey="atividades.pageTitle" actionLabelKey="atividades.newAction" (action)="openCreateModal()" />
 
   <p-tabs value="0">
     <p-tablist>
-      <p-tab value="0">Gerenciar atividades</p-tab>
-      <p-tab value="1">Consolidar nota por aluno</p-tab>
+      <p-tab value="0">{{ 'atividades.tab.manage' | transloco }}</p-tab>
+      <p-tab value="1">{{ 'atividades.tab.consolidate' | transloco }}</p-tab>
     </p-tablist>
     <p-tabpanels>
       <p-tabpanel value="0">
@@ -20,20 +20,20 @@
           >
             <ng-template pTemplate="caption">
               <app-table-search
-                placeholder="Pesquisar atividade"
+                placeholderKey="atividades.searchPlaceholder"
                 (searchChange)="dtAtividades.filterGlobal($event, 'contains')"
               />
             </ng-template>
             <ng-template pTemplate="header">
               <tr>
-                <th>Atividade</th>
-                <th>Tipo</th>
-                <th>Aluno</th>
-                <th>Materia</th>
-                <th>Bimestre</th>
-                <th>Peso</th>
-                <th>Nota atividade</th>
-                <th class="w-36">Acoes</th>
+                <th>{{ 'atividades.col.activity' | transloco }}</th>
+                <th>{{ 'atividades.col.type' | transloco }}</th>
+                <th>{{ 'atividades.col.student' | transloco }}</th>
+                <th>{{ 'atividades.col.subject' | transloco }}</th>
+                <th>{{ 'atividades.col.term' | transloco }}</th>
+                <th>{{ 'atividades.col.weight' | transloco }}</th>
+                <th>{{ 'atividades.col.activityGrade' | transloco }}</th>
+                <th class="w-24 sm:w-32">{{ 'alunos.col.actions' | transloco }}</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row>
@@ -46,9 +46,27 @@
                 <td>{{ row.peso }}</td>
                 <td>{{ row.notaAtividade }}</td>
                 <td>
-                  <div class="flex gap-2">
-                    <button pButton type="button" severity="secondary" (click)="startEdit(row)">Editar</button>
-                    <button pButton type="button" severity="danger" (click)="confirmRemove(row.id)">Remover</button>
+                  <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+                    <p-button
+                      icon="pi pi-pencil"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="secondary"
+                      size="small"
+                      [pTooltip]="'common.edit' | transloco"
+                      tooltipPosition="top"
+                      (onClick)="startEdit(row)"
+                    />
+                    <p-button
+                      icon="pi pi-trash"
+                      [rounded]="true"
+                      [text]="true"
+                      severity="danger"
+                      size="small"
+                      [pTooltip]="'common.remove' | transloco"
+                      tooltipPosition="top"
+                      (onClick)="confirmRemove(row.id)"
+                    />
                   </div>
                 </td>
               </tr>
@@ -68,11 +86,11 @@
             <ng-template pTemplate="header">
               <tr>
                 <th style="width: 3rem"></th>
-                <th>Aluno</th>
-                <th>Turma</th>
-                <th>Materia</th>
-                <th>Bimestre</th>
-                <th class="w-36">Gerar nota</th>
+                <th>{{ 'atividades.col.student' | transloco }}</th>
+                <th>{{ 'notas.col.turma' | transloco }}</th>
+                <th>{{ 'atividades.col.subject' | transloco }}</th>
+                <th>{{ 'atividades.col.term' | transloco }}</th>
+                <th class="w-24 sm:w-36">{{ 'atividades.col.generateGrade' | transloco }}</th>
               </tr>
             </ng-template>
             <ng-template pTemplate="body" let-row let-expanded="expanded">
@@ -94,7 +112,17 @@
                 <td>{{ row.materiaNome }}</td>
                 <td>{{ row.bimestre }}</td>
                 <td>
-                  <button pButton type="button" (click)="gerarNota(row)">Gerar nota</button>
+                  <p-button
+                    icon="pi pi-calculator"
+                    [label]="'atividades.btn.generateGrade' | transloco"
+                    size="small"
+                    severity="success"
+                    [outlined]="true"
+                    [pTooltip]="'atividades.tooltip.calcReview' | transloco"
+                    tooltipPosition="top"
+                    styleClass="max-sm:[&_.p-button-label]:hidden"
+                    (onClick)="gerarNota(row)"
+                  />
                 </td>
               </tr>
             </ng-template>
@@ -105,9 +133,9 @@
                     <p-table [value]="row.atividades" responsiveLayout="scroll">
                       <ng-template pTemplate="header">
                         <tr>
-                          <th>Atividade</th>
-                          <th>Nota</th>
-                          <th>Peso</th>
+                          <th>{{ 'atividades.col.activity' | transloco }}</th>
+                          <th>{{ 'notas.col.nota' | transloco }}</th>
+                          <th>{{ 'atividades.col.weight' | transloco }}</th>
                         </tr>
                       </ng-template>
                       <ng-template pTemplate="body" let-item>
@@ -133,48 +161,47 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '62rem', 'max-width': '95vw' }"
-    [contentStyle]="{ overflow: 'visible' }"
-    [header]="editingId() ? 'Editar atividade' : 'Nova atividade'"
+    [header]="(editingId() ? 'atividades.dialog.edit' : 'atividades.dialog.new') | transloco"
     (onHide)="cancelEdit()"
   >
-    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-2">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
       <label class="flex flex-col gap-1 text-sm">
-        Nome da atividade
+        {{ 'atividades.field.activityName' | transloco }}
         <input pInputText type="text" formControlName="nome" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Tipo
+        {{ 'atividades.field.type' | transloco }}
         <p-select formControlName="tipo" [options]="tipoOptions" optionLabel="label" optionValue="value" [fluid]="true" appendTo="body" />
       </label>
-      <label class="flex flex-col gap-1 text-sm md:col-span-2">
-        Descricao
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+        {{ 'atividades.field.description' | transloco }}
         <input pInputText type="text" formControlName="descricao" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Turma
+        {{ 'atividades.field.class' | transloco }}
         <p-select formControlName="turmaId" [options]="facade.turmaOptions()" optionLabel="label" optionValue="value" [filter]="true" [fluid]="true" appendTo="body" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Aluno
+        {{ 'atividades.field.student' | transloco }}
         <p-select formControlName="alunoId" [options]="alunosOptions()" optionLabel="label" optionValue="value" [filter]="true" [fluid]="true" appendTo="body" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Materia
+        {{ 'atividades.field.subject' | transloco }}
         <p-select formControlName="materiaId" [options]="materiasOptions()" optionLabel="label" optionValue="value" [filter]="true" [fluid]="true" appendTo="body" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Bimestre
+        {{ 'atividades.field.term' | transloco }}
         <p-select formControlName="bimestre" [options]="bimestreOptions" optionLabel="label" optionValue="value" [fluid]="true" appendTo="body" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Peso
+        {{ 'atividades.field.weight' | transloco }}
         <input pInputText type="number" min="0.1" step="0.1" formControlName="peso" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Nota da atividade
+        {{ 'atividades.field.activityGrade' | transloco }}
         <input pInputText type="number" min="0" max="10" step="0.1" formControlName="notaAtividade" />
       </label>
-      <div class="md:col-span-2">
+      <div class="sm:col-span-2">
         <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
       </div>
     </form>
@@ -185,20 +212,20 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '66rem', 'max-width': '98vw' }"
-    header="Conferencia de calculo da nota"
+    [header]="'atividades.calc.title' | transloco"
     (onHide)="cancelarGerarNota()"
   >
     @if (calculoContext(); as context) {
-      <div class="mb-3 text-sm text-surface-700">
+      <div class="mb-3 text-sm text-muted-color">
         <strong>{{ context.alunoNome }}</strong> - {{ context.turmaNome }} - {{ context.materiaNome }} - {{ context.bimestre }}
       </div>
       <p-table [value]="calculoItens()" responsiveLayout="scroll">
         <ng-template pTemplate="header">
           <tr>
-            <th>Atividade</th>
-            <th>Nota da atividade</th>
-            <th>Peso</th>
-            <th>Contribuicao (nota*peso)</th>
+            <th>{{ 'atividades.col.activity' | transloco }}</th>
+            <th>{{ 'atividades.calc.col.activityGrade' | transloco }}</th>
+            <th>{{ 'atividades.col.weight' | transloco }}</th>
+            <th>{{ 'atividades.calc.col.contrib' | transloco }}</th>
           </tr>
         </ng-template>
         <ng-template pTemplate="body" let-item let-i="rowIndex">
@@ -227,14 +254,14 @@
                 (ngModelChange)="atualizarItem(i, 'peso', $event)"
               />
             </td>
-            <td>{{ (item.notaAtividade * item.peso).toFixed(2) }}</td>
+            <td>{{ item.contribuicaoDisplay }}</td>
           </tr>
         </ng-template>
       </p-table>
 
-      <div class="mt-4 grid gap-2 md:grid-cols-2">
+      <div class="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         <label class="flex flex-col gap-1 text-sm">
-          Nota final calculada/ajustada
+          {{ 'atividades.calc.finalGrade' | transloco }}
           <input
             pInputText
             type="number"
@@ -249,8 +276,12 @@
       </div>
 
       <div class="mt-4 flex justify-end gap-2">
-        <button pButton type="button" severity="secondary" (click)="cancelarGerarNota()">Cancelar</button>
-        <button pButton type="button" (click)="confirmarGerarNota()">Confirmar gerar nota</button>
+        <button pButton type="button" severity="secondary" (click)="cancelarGerarNota()">
+          {{ 'common.cancel' | transloco }}
+        </button>
+        <button pButton type="button" (click)="confirmarGerarNota()">
+          {{ 'atividades.calc.confirm' | transloco }}
+        </button>
       </div>
     }
   </p-dialog>

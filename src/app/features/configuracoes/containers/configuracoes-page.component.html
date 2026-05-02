@@ -1,14 +1,24 @@
 <section class="space-y-4">
-  <app-page-header title="Configuracoes da escola" />
+  <app-page-header titleKey="settings.pageTitle" />
+
+  <p-card styleClass="app-panel-border">
+    <div class="mb-3">
+      <h2 class="text-lg font-semibold text-color">{{ 'settings.languageTitle' | transloco }}</h2>
+      <p class="mt-1 text-sm text-muted-color">
+        {{ 'settings.languageHint' | transloco }}
+      </p>
+    </div>
+    <app-language-switcher />
+  </p-card>
 
   <p-card>
-    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-2">
-      <label class="flex flex-col gap-1 text-sm md:col-span-2">
-        Nome da escola
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2">
+        {{ 'settings.field.nomeEscola' | transloco }}
         <input pInputText type="text" formControlName="nomeEscola" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Divisao das notas
+        {{ 'settings.field.periodizacao' | transloco }}
         <p-select
           formControlName="periodizacaoNotas"
           [options]="periodizacaoOptions"
@@ -19,18 +29,18 @@
         />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Nota maxima
+        {{ 'settings.field.notaMaxima' | transloco }}
         <input pInputText type="number" min="1" step="0.1" formControlName="notaMaxima" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Media de aprovacao
+        {{ 'settings.field.mediaAprovacao' | transloco }}
         <input pInputText type="number" min="0" step="0.1" formControlName="mediaAprovacao" />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Usa recuperacao
+        {{ 'settings.field.recuperacao' | transloco }}
         <p-select
           formControlName="usaRecuperacao"
-          [options]="simNaoOptions"
+          [options]="simNaoOptions()"
           optionLabel="label"
           optionValue="value"
           [fluid]="true"
@@ -38,10 +48,10 @@
         />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Permitir lancamento manual de nota
+        {{ 'settings.field.lancamentoManual' | transloco }}
         <p-select
           formControlName="permiteLancamentoManual"
-          [options]="simNaoOptions"
+          [options]="simNaoOptions()"
           optionLabel="label"
           optionValue="value"
           [fluid]="true"
@@ -49,10 +59,10 @@
         />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Mostrar ranking por turma
+        {{ 'settings.field.ranking' | transloco }}
         <p-select
           formControlName="mostrarRankingTurma"
-          [options]="simNaoOptions"
+          [options]="simNaoOptions()"
           optionLabel="label"
           optionValue="value"
           [fluid]="true"
@@ -60,18 +70,9 @@
         />
       </label>
 
-      <div class="md:col-span-2">
+      <div class="sm:col-span-2">
         <app-form-actions [loading]="facade.loading()" [showCancel]="false" />
       </div>
     </form>
-  </p-card>
-
-  <p-card>
-    <h3 class="mb-3 text-lg font-medium">Sugestoes de configuracao</h3>
-    <ul class="list-disc space-y-2 pl-5 text-sm text-surface-700">
-      @for (item of suggestions; track item) {
-        <li>{{ item }}</li>
-      }
-    </ul>
   </p-card>
 </section>

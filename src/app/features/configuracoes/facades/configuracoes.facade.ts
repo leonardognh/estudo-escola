@@ -24,7 +24,7 @@ export class ConfiguracoesFacade {
         take(1),
         tap((items) => this.configuracao.set(items[0] ?? null)),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar configuracoes da escola.');
+          this.errorMessage.set('errors.configuracoes.load');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),
@@ -45,7 +45,7 @@ export class ConfiguracoesFacade {
         switchMap(() => this.configuracoesService.list().pipe(take(1))),
         tap((items) => this.configuracao.set(items[0] ?? null)),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar configuracoes da escola.');
+          this.errorMessage.set('errors.configuracoes.save');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),

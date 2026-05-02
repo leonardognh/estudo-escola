@@ -2,12 +2,14 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } 
 import { FormArray, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { TableSearchComponent } from '@shared/components/table-search/table-search.component';
 import { FormActionsComponent } from '@shared/components/form-actions/form-actions.component';
@@ -22,11 +24,13 @@ import { ANO_OPTIONS, MateriaPorAnoFormValue } from '@materias/models/materia.mo
     ReactiveFormsModule,
     InputTextModule,
     ButtonModule,
+    TooltipModule,
     CardModule,
     SelectModule,
     TableModule,
     DialogModule,
     ConfirmDialogModule,
+    TranslocoPipe,
     PageHeaderComponent,
     TableSearchComponent,
     FormActionsComponent,
@@ -39,17 +43,12 @@ export class MateriasAnoPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(MateriasFacade);
   protected readonly anoOptions = [...ANO_OPTIONS];
   protected readonly modalVisible = signal(false);
   protected readonly editingAno = signal<string | null>(null);
   protected readonly formError = signal<string | null>(null);
-
-  protected readonly labels = {
-    title: 'Atribuicao de materias por ano',
-    save: 'Salvar',
-    cancel: 'Cancelar',
-  };
 
   protected readonly anoForm = this.formBuilder.nonNullable.group({
     ano: [this.anoOptions[0]?.value ?? '', [Validators.required]],
@@ -74,7 +73,11 @@ export class MateriasAnoPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
   }
@@ -117,8 +120,8 @@ export class MateriasAnoPageComponent {
       this.anoForm.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha os campos obrigatorios.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('validation.fillFields'),
       });
       return;
     }
@@ -133,7 +136,7 @@ export class MateriasAnoPageComponent {
     }[];
 
     if (new Set(itens.map((item) => item.materiaId)).size !== itens.length) {
-      this.formError.set('Nao repita materia no mesmo ano.');
+      this.formError.set('materiasAno.formError.duplicate');
       return;
     }
 
@@ -149,7 +152,7 @@ export class MateriasAnoPageComponent {
     });
 
     if (hasInvalidProfessores) {
-      this.formError.set('Professores devem ser validos para a materia e diferentes entre si.');
+      this.formError.set('materiasAno.formError.professores');
       return;
     }
 
@@ -166,15 +169,15 @@ export class MateriasAnoPageComponent {
       this.facade.replaceMateriasPorAnoByAno(originalAno, payloads);
       this.messageService.add({
         severity: 'success',
-        summary: 'Sucesso',
-        detail: 'Atribuicoes do ano atualizadas.',
+        summary: this.transloco.translate('common.success'),
+        detail: this.transloco.translate('materiasAno.toast.updated'),
       });
     } else {
       this.facade.saveMateriasPorAnoLote(payloads);
       this.messageService.add({
         severity: 'success',
-        summary: 'Sucesso',
-        detail: 'Atribuicoes cadastradas.',
+        summary: this.transloco.translate('common.success'),
+        detail: this.transloco.translate('materiasAno.toast.created'),
       });
     }
 
@@ -194,17 +197,17 @@ export class MateriasAnoPageComponent {
 
   protected confirmRemoveAno(ano: string): void {
     this.confirmationService.confirm({
-      header: 'Confirmar remocao',
-      message: `Deseja remover todas as materias atribuidas ao ano ${ano}?`,
-      acceptLabel: 'Remover',
-      rejectLabel: 'Cancelar',
+      header: this.transloco.translate('common.confirmRemoveTitle'),
+      message: this.transloco.translate('materiasAno.confirm.removeYearMessage', { ano }),
+      acceptLabel: this.transloco.translate('common.remove'),
+      rejectLabel: this.transloco.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.facade.replaceMateriasPorAnoByAno(ano, []);
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: `Atribuicoes do ano ${ano} removidas.`,
+          summary: this.transloco.translate('common.success'),
+          detail: this.transloco.translate('materiasAno.toast.removedYear', { ano }),
         });
       },
     });

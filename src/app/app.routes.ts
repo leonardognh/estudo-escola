@@ -20,11 +20,24 @@ export const routes: Routes = [
       import('./features/inicio/inicio.routes').then((m) => m.INICIO_ROUTES),
   },
   {
+    path: 'portal',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['aluno', 'responsavel'] },
+    loadChildren: () => import('./features/portal/portal.routes').then((m) => m.PORTAL_ROUTES),
+  },
+  {
     path: 'alunos',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['admin'] },
     loadChildren: () =>
       import('./features/alunos/alunos.routes').then((m) => m.ALUNOS_ROUTES),
+  },
+  {
+    path: 'responsaveis',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin'] },
+    loadChildren: () =>
+      import('./features/responsaveis/responsaveis.routes').then((m) => m.RESPONSAVEIS_ROUTES),
   },
   {
     path: 'professores',
@@ -94,6 +107,19 @@ export const routes: Routes = [
       import('./features/presencas/presencas.routes').then((m) => m.PRESENCAS_ROUTES),
   },
   {
+    path: 'intervencoes',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'professor'] },
+    loadChildren: () =>
+      import('./features/intervencoes/intervencoes.routes').then((m) => m.INTERVENCOES_ROUTES),
+  },
+  {
+    path: 'riscos',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin', 'professor'] },
+    loadChildren: () => import('./features/riscos/riscos.routes').then((m) => m.RISCOS_ROUTES),
+  },
+  {
     path: 'atividades',
     canActivate: [authGuard, roleGuard],
     data: { roles: ['admin', 'professor'] },
@@ -106,6 +132,15 @@ export const routes: Routes = [
     data: { roles: ['admin'] },
     loadChildren: () =>
       import('./features/configuracoes/configuracoes.routes').then((m) => m.CONFIGURACOES_ROUTES),
+  },
+  {
+    path: 'painel-executivo',
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['admin'] },
+    loadChildren: () =>
+      import('./features/painel-executivo/painel-executivo.routes').then(
+        (m) => m.PAINEL_EXECUTIVO_ROUTES,
+      ),
   },
   {
     path: '**',

@@ -5,73 +5,123 @@
     <router-outlet />
   </main>
 } @else {
-  <main class="min-h-screen overflow-x-hidden app-shell-bg">
-    <div class="mx-auto grid min-h-screen w-full max-w-screen-2xl gap-4 overflow-x-hidden p-3 md:grid-cols-[280px_minmax(0,1fr)] md:p-4">
-      <aside class="app-panel-bg app-panel-border rounded-xl border p-4">
-        <header class="app-panel-border mb-5 border-b pb-4">
-          <div class="flex items-center justify-between gap-2">
-            <h1 class="text-2xl font-bold text-color">Escola</h1>
-            <button pButton type="button" severity="secondary" variant="outlined" (click)="toggleTheme()">
-              {{ isDarkTheme() ? 'Light' : 'Dark' }}
+  <main class="app-shell-bg relative min-h-screen overflow-x-hidden">
+    <div class="relative mx-auto w-full max-w-screen-2xl p-3 md:p-4">
+      @if (mobileNavOpen()) {
+        <button
+          type="button"
+          class="app-shell-nav-backdrop fixed inset-0 z-[1040] border-0 bg-black/45 p-0 backdrop-blur-[1px] md:hidden"
+          [attr.aria-label]="'app.closeMenu' | transloco"
+          (click)="closeMobileNav()"
+        ></button>
+      }
+
+      <div class="grid min-h-screen w-full gap-4 overflow-x-hidden md:grid-cols-[280px_minmax(0,1fr)]">
+        <aside
+          class="app-panel-bg app-panel-border flex max-h-screen flex-col gap-4 overflow-y-auto border-r p-4 shadow-2xl transition-transform duration-300 ease-out max-md:fixed max-md:inset-y-0 max-md:left-0 max-md:z-[1060] max-md:w-[min(280px,88vw)] max-md:rounded-none max-md:border-0 max-md:border-r max-md:border-solid md:max-h-none md:translate-x-0 md:rounded-xl md:border md:shadow-none"
+          [ngClass]="{
+            'max-md:-translate-x-full': !mobileNavOpen(),
+            'max-md:translate-x-0': mobileNavOpen(),
+          }"
+        >
+          <header class="app-panel-border shrink-0 border-b pb-4">
+            <div class="flex items-center justify-between gap-2">
+              <h1 class="text-2xl font-bold text-color">{{ 'app.brand' | transloco }}</h1>
+              <div class="flex shrink-0 items-center gap-1">
+                <button
+                  pButton
+                  type="button"
+                  class="app-shell-mobile-only"
+                  icon="pi pi-times"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  [attr.aria-label]="'app.closeMenu' | transloco"
+                  (click)="closeMobileNav()"
+                ></button>
+                <button
+                  pButton
+                  type="button"
+                  [icon]="isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon'"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="secondary"
+                  [attr.aria-label]="
+                    (isDarkTheme() ? 'app.themeToLight' : 'app.themeToDark') | transloco
+                  "
+                  (click)="toggleTheme()"
+                ></button>
+              </div>
+            </div>
+            @if (currentUser(); as user) {
+              <p class="mt-2 text-sm text-muted-color">{{ user.nome }} ({{ user.role }})</p>
+            }
+          </header>
+
+          <nav class="min-h-0 flex-1 space-y-4 overflow-y-auto">
+            @for (section of navSections(); track section.groupKey) {
+              <section>
+                <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-color">
+                  {{ section.groupKey | transloco }}
+                </h2>
+                <div class="flex flex-col gap-2">
+                  @for (item of section.items; track item.path) {
+                    <button
+                      pButton
+                      severity="secondary"
+                      [routerLink]="item.path"
+                      routerLinkActive="p-button-info"
+                      [routerLinkActiveOptions]="{ exact: true }"
+                      class="justify-start"
+                    >
+                      {{ item.labelKey | transloco }}
+                    </button>
+                  }
+                </div>
+              </section>
+            }
+          </nav>
+
+          <div class="app-panel-border shrink-0 border-t pt-4">
+            <button pButton severity="danger" variant="outlined" class="w-full" (click)="logout()">
+              {{ 'app.logout' | transloco }}
             </button>
           </div>
-          @if (currentUser(); as user) {
-            <p class="mt-2 text-sm text-surface-600">{{ user.nome }} ({{ user.role }})</p>
-          }
-        </header>
+        </aside>
 
-        <div class="mb-4 md:hidden">
-          <label class="sr-only" for="app-route-select">Navegacao</label>
-          <select
-            id="app-route-select"
-            class="w-full rounded-md border border-surface-300 bg-surface-0 px-3 py-2 text-sm text-surface-900"
-            [value]="selectedRoute()"
-            (change)="onNavigate($any($event.target).value)"
-          >
-            @for (section of navSections(); track section.group) {
-              <optgroup [label]="section.group">
-                @for (item of section.items; track item.path) {
-                  <option [value]="item.path">{{ item.label }}</option>
-                }
-              </optgroup>
-            }
-          </select>
-        </div>
-
-        <nav class="hidden space-y-4 md:block">
-          @for (section of navSections(); track section.group) {
-            <section>
-              <h2 class="mb-2 text-xs font-semibold uppercase tracking-wide text-surface-500">
-                {{ section.group }}
-              </h2>
-              <div class="flex flex-col gap-2">
-                @for (item of section.items; track item.path) {
-                  <button
-                    pButton
-                    severity="secondary"
-                    [routerLink]="item.path"
-                    routerLinkActive="p-button-info"
-                    [routerLinkActiveOptions]="{ exact: true }"
-                    class="justify-start"
-                  >
-                    {{ item.label }}
-                  </button>
-                }
-              </div>
-            </section>
-          }
-        </nav>
-
-        <div class="app-panel-border mt-6 border-t pt-4">
-          <button pButton severity="danger" variant="outlined" class="w-full" (click)="logout()">
-            Sair
-          </button>
-        </div>
-      </aside>
-
-      <section class="app-panel-bg app-panel-border min-w-0 overflow-x-hidden rounded-xl border p-4 sm:p-5">
-        <router-outlet />
-      </section>
+        <section class="app-panel-bg app-panel-border min-w-0 overflow-x-hidden rounded-xl border p-4 sm:p-5">
+          <div class="mb-4 flex items-center justify-between gap-3 md:hidden">
+            <button
+              pButton
+              type="button"
+              icon="pi pi-bars"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              [attr.aria-label]="'app.openMenu' | transloco"
+              (click)="openMobileNav()"
+            ></button>
+            <span class="flex-1 truncate text-center text-base font-semibold text-color">{{
+              'app.brand' | transloco
+            }}</span>
+            <button
+              pButton
+              type="button"
+              size="small"
+              class="shrink-0"
+              [icon]="isDarkTheme() ? 'pi pi-sun' : 'pi pi-moon'"
+              [rounded]="true"
+              [text]="true"
+              severity="secondary"
+              [attr.aria-label]="
+                (isDarkTheme() ? 'app.themeToLight' : 'app.themeToDark') | transloco
+              "
+              (click)="toggleTheme()"
+            ></button>
+          </div>
+          <router-outlet />
+        </section>
+      </div>
     </div>
   </main>
 }

@@ -1,9 +1,9 @@
 <section class="space-y-4">
   <p-confirmdialog />
-  <app-page-header [title]="labels.title" actionLabel="Novo aluno" (action)="openCreateModal()" />
+  <app-page-header titleKey="alunos.pageTitle" actionLabelKey="alunos.newAction" (action)="openCreateModal()" />
 
   @if (facade.loading()) {
-    <p class="text-sm text-muted-color">Carregando...</p>
+    <p class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</p>
   } @else {
     <p-table
       #dtAlunos
@@ -14,13 +14,16 @@
       responsiveLayout="scroll"
     >
       <ng-template pTemplate="caption">
-        <app-table-search placeholder="Pesquisar aluno" (searchChange)="dtAlunos.filterGlobal($event, 'contains')" />
+        <app-table-search
+          placeholderKey="alunos.searchPlaceholder"
+          (searchChange)="dtAlunos.filterGlobal($event, 'contains')"
+        />
       </ng-template>
       <ng-template pTemplate="header">
         <tr>
-          <th>Nome</th>
-          <th>Email</th>
-          <th class="w-36">Acoes</th>
+          <th>{{ 'alunos.field.nome' | transloco }}</th>
+          <th>{{ 'alunos.field.email' | transloco }}</th>
+          <th class="w-24 sm:w-32">{{ 'alunos.col.actions' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-aluno>
@@ -28,13 +31,27 @@
           <td>{{ aluno.nome }}</td>
           <td>{{ aluno.email }}</td>
           <td>
-            <div class="flex gap-2">
-              <button pButton type="button" severity="secondary" (click)="startEdit(aluno)">
-                {{ labels.edit }}
-              </button>
-              <button pButton type="button" severity="danger" (click)="remove(aluno.id)">
-                {{ labels.remove }}
-              </button>
+            <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                [pTooltip]="'common.edit' | transloco"
+                tooltipPosition="top"
+                (onClick)="startEdit(aluno)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                size="small"
+                [pTooltip]="'common.remove' | transloco"
+                tooltipPosition="top"
+                (onClick)="remove(aluno.id)"
+              />
             </div>
           </td>
         </tr>
@@ -47,32 +64,29 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '42rem', 'max-width': '95vw' }"
-    [header]="editingId() ? 'Editar aluno' : 'Novo aluno'"
+    [header]="(editingId() ? 'alunos.dialog.edit' : 'alunos.dialog.new') | transloco"
     (onHide)="cancelEdit()"
   >
-    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <label class="flex flex-col gap-1 text-sm">
-        Nome
+        {{ 'alunos.field.nome' | transloco }}
         <input pInputText type="text" formControlName="nome" />
         @if (form.controls.nome.touched && form.controls.nome.invalid) {
-          <small class="text-red-600">Nome deve ter ao menos 3 caracteres.</small>
+          <small class="text-red-600">{{ 'alunos.validation.nome' | transloco }}</small>
         }
       </label>
 
       <label class="flex flex-col gap-1 text-sm">
-        Email
+        {{ 'alunos.field.email' | transloco }}
         <input pInputText type="email" formControlName="email" />
         @if (form.controls.email.touched && form.controls.email.invalid) {
-          <small class="text-red-600">Informe um e-mail valido.</small>
+          <small class="text-red-600">{{ 'alunos.validation.email' | transloco }}</small>
         }
       </label>
 
-      <app-form-actions
-        [loading]="facade.loading()"
-        [saveLabel]="labels.save"
-        [cancelLabel]="labels.cancel"
-        (cancel)="cancelEdit()"
-      />
+      <div class="sm:col-span-2">
+        <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
+      </div>
     </form>
   </p-dialog>
 </section>

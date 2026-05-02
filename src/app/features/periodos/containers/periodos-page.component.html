@@ -1,9 +1,9 @@
 <section class="space-y-4">
   <p-confirmdialog />
-  <app-page-header title="Cadastro de Periodos" actionLabel="Novo periodo" (action)="openCreateModal()" />
+  <app-page-header titleKey="periodos.pageTitle" actionLabelKey="periodos.newAction" (action)="openCreateModal()" />
 
   <p-card>
-    <h3 class="mb-3 text-lg font-medium">Periodos cadastrados</h3>
+    <h3 class="mb-3 text-lg font-medium">{{ 'periodos.section.list' | transloco }}</h3>
     <p-table
       #dtPeriodos
       [value]="facade.periodos()"
@@ -14,16 +14,16 @@
     >
       <ng-template pTemplate="caption">
         <app-table-search
-          placeholder="Pesquisar periodo"
+          placeholderKey="periodos.searchPlaceholder"
           (searchChange)="dtPeriodos.filterGlobal($event, 'contains')"
         />
       </ng-template>
       <ng-template pTemplate="header">
         <tr>
-          <th>Nome</th>
-          <th>Inicio</th>
-          <th>Fim</th>
-          <th class="w-36">Acoes</th>
+          <th>{{ 'periodos.field.nome' | transloco }}</th>
+          <th>{{ 'periodos.field.inicio' | transloco }}</th>
+          <th>{{ 'periodos.field.fim' | transloco }}</th>
+          <th class="w-24 sm:w-32">{{ 'alunos.col.actions' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-periodo>
@@ -32,13 +32,27 @@
           <td>{{ periodo.horaInicio }}</td>
           <td>{{ periodo.horaFim }}</td>
           <td>
-            <div class="flex gap-2">
-              <button pButton type="button" severity="secondary" (click)="startEdit(periodo)">
-                Editar
-              </button>
-              <button pButton type="button" severity="danger" (click)="remove(periodo.id)">
-                Remover
-              </button>
+            <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                [pTooltip]="'common.edit' | transloco"
+                tooltipPosition="top"
+                (onClick)="startEdit(periodo)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                size="small"
+                [pTooltip]="'common.remove' | transloco"
+                tooltipPosition="top"
+                (onClick)="remove(periodo.id)"
+              />
             </div>
           </td>
         </tr>
@@ -51,29 +65,36 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '40rem', 'max-width': '95vw' }"
-    [header]="editingId() ? 'Editar periodo' : 'Novo periodo'"
+    [header]="(editingId() ? 'periodos.dialog.edit' : 'periodos.dialog.new') | transloco"
     (onHide)="cancelEdit()"
   >
-    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-3">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <label class="flex flex-col gap-1 text-sm">
-        Nome
-        <input pInputText type="text" formControlName="nome" placeholder="Manha, Tarde, Noite..." />
+        {{ 'periodos.field.nome' | transloco }}
+        <input
+          pInputText
+          type="text"
+          formControlName="nome"
+          [placeholder]="'periodos.field.nomePlaceholder' | transloco"
+        />
         @if (form.controls.nome.touched && form.controls.nome.invalid) {
-          <small class="text-red-600">Nome deve ter ao menos 2 caracteres.</small>
+          <small class="text-red-600">{{ 'periodos.validation.nome' | transloco }}</small>
         }
       </label>
 
       <label class="flex flex-col gap-1 text-sm">
-        Inicio
+        {{ 'periodos.field.inicio' | transloco }}
         <input pInputText type="time" formControlName="horaInicio" />
       </label>
 
       <label class="flex flex-col gap-1 text-sm">
-        Fim
+        {{ 'periodos.field.fim' | transloco }}
         <input pInputText type="time" formControlName="horaFim" />
       </label>
 
-      <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
+      <div class="sm:col-span-2">
+        <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
+      </div>
     </form>
   </p-dialog>
 </section>

@@ -8,12 +8,14 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { filter, map, startWith, switchMap } from 'rxjs';
 
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+
 import { AuthService } from '@auth/services/auth.service';
 
 @Component({
   selector: 'app-login-page',
   standalone: true,
-  imports: [ReactiveFormsModule, ButtonModule, CardModule, InputTextModule],
+  imports: [ReactiveFormsModule, ButtonModule, CardModule, InputTextModule, TranslocoPipe],
   templateUrl: './login-page.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -22,6 +24,7 @@ export class LoginPageComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly messageService = inject(MessageService);
+  private readonly transloco = inject(TranslocoService);
 
   private readonly loginAttempt = signal<{ email: string; senha: string; lembrarMe: boolean } | null>(null);
   private readonly loginResult = toSignal(
@@ -50,16 +53,16 @@ export class LoginPageComponent {
       if (!result.ok) {
         this.messageService.add({
           severity: 'error',
-          summary: 'Acesso negado',
-          detail: 'Credenciais invalidas.',
+          summary: this.transloco.translate('auth.deniedTitle'),
+          detail: this.transloco.translate('auth.deniedDetail'),
         });
         this.loginAttempt.set(null);
         return;
       }
       this.messageService.add({
         severity: 'success',
-        summary: 'Bem-vindo',
-        detail: 'Login realizado com sucesso.',
+        summary: this.transloco.translate('auth.welcomeTitle'),
+        detail: this.transloco.translate('auth.welcomeDetail'),
       });
       this.loginAttempt.set(null);
       this.router.navigateByUrl('/inicio');
@@ -71,8 +74,8 @@ export class LoginPageComponent {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha email e senha corretamente.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('auth.validationDetail'),
       });
       return;
     }

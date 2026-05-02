@@ -52,7 +52,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar materias.');
+          this.errorMessage.set('errors.materias.load');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -79,7 +79,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar materia.');
+          this.errorMessage.set('errors.materias.save');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -107,7 +107,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover materia.');
+          this.errorMessage.set('errors.materias.remove');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -137,7 +137,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar atribuicao de materia por ano.');
+          this.errorMessage.set('errors.materias.saveMpa');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -164,7 +164,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar atribuicoes de materias por ano.');
+          this.errorMessage.set('errors.materias.saveMpas');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -193,7 +193,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover atribuicao de materia por ano.');
+          this.errorMessage.set('errors.materias.removeMpa');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -231,7 +231,7 @@ export class MateriasFacade {
           this.professores.set(professores);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao atualizar atribuicoes de materias por ano.');
+          this.errorMessage.set('errors.materias.updateMpas');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),

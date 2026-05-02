@@ -1,0 +1,172 @@
+<div class="pb-5">
+  <h2 class="text-2xl font-semibold text-color">Portal família</h2>
+  @if (subtitulo()) {
+    <p class="mt-1 text-sm text-muted-color">{{ subtitulo() }}</p>
+  }
+</div>
+
+@if (facade.portalAlunoOpcoes().length > 1) {
+  <div class="mb-4 max-w-md">
+    <label class="mb-1 block text-sm text-muted-color" for="portal-aluno-select">Aluno</label>
+    <p-select
+      inputId="portal-aluno-select"
+      [options]="facade.portalAlunoOpcoes()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="facade.selectedPortalAlunoId()"
+      (ngModelChange)="onPortalAlunoChange($event)"
+      [fluid]="true"
+      appendTo="body"
+    />
+  </div>
+}
+
+@if (facade.loading()) {
+  <p class="text-sm text-muted-color">Carregando...</p>
+} @else if (facade.aluno(); as aluno) {
+  <div class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <p-card>
+      <div class="text-sm text-muted-color">Média geral</div>
+      <div class="text-2xl font-semibold text-color">{{ facade.mediaGeral() }}</div>
+    </p-card>
+    <p-card>
+      <div class="text-sm text-muted-color">Frequência (lançamentos)</div>
+      <div class="text-2xl font-semibold text-color">{{ facade.frequenciaPercent() }}%</div>
+    </p-card>
+    <p-card>
+      <div class="text-sm text-muted-color">Turmas</div>
+      <div class="text-2xl font-semibold text-color">{{ facade.turmas().length }}</div>
+    </p-card>
+    <p-card>
+      <div class="text-sm text-muted-color">Comunicados</div>
+      <div class="text-sm text-muted-color">Em breve: avisos e ocorrências.</div>
+    </p-card>
+  </div>
+
+  <p-tabs value="0">
+    <p-tablist>
+      <p-tab value="0">Boletim</p-tab>
+      <p-tab value="1">Presenças</p-tab>
+      <p-tab value="2">Agenda</p-tab>
+      <p-tab value="3">Atividades</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="0">
+        <p-card styleClass="app-panel-border">
+          <p-table [value]="facade.notas()" responsiveLayout="scroll" [paginator]="true" [rows]="10">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Turma</th>
+                <th>Matéria</th>
+                <th>Bimestre</th>
+                <th>Nota</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.turmaNome }}</td>
+                <td>{{ row.materiaNome }}</td>
+                <td>{{ row.bimestre }}</td>
+                <td>{{ row.valor }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center text-muted-color">Nenhuma nota lançada ainda.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
+      <p-tabpanel value="1">
+        <p-card styleClass="app-panel-border">
+          <p-table [value]="facade.presencas()" responsiveLayout="scroll" [paginator]="true" [rows]="12">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Data</th>
+                <th>Aula</th>
+                <th>Status</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.data }}</td>
+                <td>{{ row.resumoAula }}</td>
+                <td>
+                  <p-tag [value]="row.status" [severity]="row.statusTagSeverity" />
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="3" class="text-center text-muted-color">Nenhuma presença registrada.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
+      <p-tabpanel value="2">
+        <p-card styleClass="app-panel-border">
+          <p-table [value]="facade.agenda()" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Dia</th>
+                <th>Horário</th>
+                <th>Matéria</th>
+                <th>Turma</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.diaLabel }}</td>
+                <td>{{ row.horaInicio }} – {{ row.horaFim }}</td>
+                <td>{{ row.materiaNome }}</td>
+                <td>{{ row.turmaNome }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center text-muted-color">Sem horários para sua turma.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
+      <p-tabpanel value="3">
+        <p-card styleClass="app-panel-border">
+          <p-table [value]="facade.atividades()" responsiveLayout="scroll" [paginator]="true" [rows]="10">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Atividade</th>
+                <th>Matéria</th>
+                <th>Bimestre</th>
+                <th>Nota</th>
+                <th>Peso</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ row.nome }}</td>
+                <td>{{ row.materiaNome }}</td>
+                <td>{{ row.bimestre }}</td>
+                <td>{{ row.notaAtividade }}</td>
+                <td>{{ row.peso }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="text-center text-muted-color">Nenhuma atividade.</td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-card>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+} @else {
+  <p-card>
+    <p class="text-color">
+      Não foi possível identificar o aluno desta conta. Entre em contato com a escola para vincular o cadastro.
+    </p>
+  </p-card>
+}

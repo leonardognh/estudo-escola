@@ -1,9 +1,9 @@
 <section class="space-y-4">
-  <h2 class="text-2xl font-semibold text-color">Calendario</h2>
+  <h2 class="text-2xl font-semibold text-color">Calendário</h2>
 
   <p-card>
     <h3 class="mb-3 text-lg font-medium">Filtros inteligentes</h3>
-    <form [formGroup]="filtersForm" class="grid gap-3 md:grid-cols-6">
+    <form [formGroup]="filtersForm" class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
       <label class="flex flex-col gap-1 text-sm">
         Ano
         <p-select
@@ -28,7 +28,7 @@
         />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Periodo
+        Período
         <p-select
           formControlName="periodo"
           [options]="periodosOptions()"
@@ -39,7 +39,7 @@
         />
       </label>
       <label class="flex flex-col gap-1 text-sm">
-        Materia
+        Matéria
         <p-select
           formControlName="materiaId"
           [options]="materiasOptions()"
@@ -115,7 +115,7 @@
           <ng-template pTemplate="header">
             <tr>
               <th class="w-28">Horario</th>
-              <th>Materias</th>
+              <th>Matérias</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-row>

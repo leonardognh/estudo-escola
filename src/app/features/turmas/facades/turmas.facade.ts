@@ -33,6 +33,15 @@ export class TurmasFacade {
     })),
   );
 
+  /** Linhas da tabela com textos derivados (evita chamadas no template). */
+  readonly turmasTableRows = computed(() =>
+    this.turmas().map((turma) => ({
+      ...turma,
+      periodoLabel: this.getPeriodoLabelById(turma.periodoId),
+      alunosNomesDisplay: this.getAlunosNamesByIds(turma.alunosIds) || '',
+    })),
+  );
+
   loadData(): void {
     this.loading.set(true);
     this.errorMessage.set(null);
@@ -48,7 +57,7 @@ export class TurmasFacade {
           this.periodos.set(periodos);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar turmas.');
+          this.errorMessage.set('errors.turmas.load');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -76,7 +85,7 @@ export class TurmasFacade {
           this.periodos.set(periodos);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar turma.');
+          this.errorMessage.set('errors.turmas.save');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -105,7 +114,7 @@ export class TurmasFacade {
           this.periodos.set(periodos);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover turma.');
+          this.errorMessage.set('errors.turmas.remove');
           return of([[], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -120,6 +129,6 @@ export class TurmasFacade {
 
   getPeriodoLabelById(periodoId: string): string {
     const periodo = this.periodos().find((item) => item.id === periodoId);
-    return periodo ? `${periodo.nome} (${periodo.horaInicio}-${periodo.horaFim})` : 'Periodo nao definido';
+    return periodo ? `${periodo.nome} (${periodo.horaInicio}-${periodo.horaFim})` : '—';
   }
 }

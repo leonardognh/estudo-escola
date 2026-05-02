@@ -4,12 +4,14 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "outDir": "./out-tsc/spec",
+    "module": "CommonJS",
     "baseUrl": "./src",
     "paths": {
       "@app/*": ["app/*"],
       "@auth/*": ["app/core/auth/*"],
       "@shared/*": ["app/shared/*"],
       "@alunos/*": ["app/features/alunos/*"],
+      "@responsaveis/*": ["app/features/responsaveis/*"],
       "@professores/*": ["app/features/professores/*"],
       "@materias/*": ["app/features/materias/*"],
       "@materias-ano/*": ["app/features/materias-ano/*"],
@@ -21,11 +23,13 @@
       "@presencas/*": ["app/features/presencas/*"],
       "@inicio/*": ["app/features/inicio/*"],
       "@atividades/*": ["app/features/atividades/*"],
-      "@configuracoes/*": ["app/features/configuracoes/*"]
+      "@configuracoes/*": ["app/features/configuracoes/*"],
+      "@intervencoes/*": ["app/features/intervencoes/*"],
+      "@riscos/*": ["app/features/riscos/*"],
+      "@painel-executivo/*": ["app/features/painel-executivo/*"],
+      "@portal/*": ["app/features/portal/*"]
     },
-    "types": [
-      "vitest/globals"
-    ]
+    "types": ["jest"]
   },
   "include": [
     "src/**/*.d.ts",

@@ -1,12 +1,14 @@
 import { ChangeDetectionStrategy, Component, effect, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { TableSearchComponent } from '@shared/components/table-search/table-search.component';
 import { FormActionsComponent } from '@shared/components/form-actions/form-actions.component';
@@ -20,11 +22,13 @@ import { Periodo } from '@periodos/models/periodo.model';
   imports: [
     ReactiveFormsModule,
     ButtonModule,
+    TooltipModule,
     CardModule,
     InputTextModule,
     TableModule,
     DialogModule,
     ConfirmDialogModule,
+    TranslocoPipe,
     PageHeaderComponent,
     TableSearchComponent,
     FormActionsComponent,
@@ -37,6 +41,7 @@ export class PeriodosPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(PeriodosFacade);
   protected readonly editingId = signal<string | null>(null);
   protected readonly modalVisible = signal(false);
@@ -52,7 +57,11 @@ export class PeriodosPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
   }
@@ -67,18 +76,17 @@ export class PeriodosPageComponent {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha os campos obrigatorios.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('validation.fillFields'),
       });
       return;
     }
 
     if (this.form.controls.horaInicio.value >= this.form.controls.horaFim.value) {
-      this.facade.errorMessage.set('Hora de inicio deve ser menor que hora de fim.');
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Hora de inicio deve ser menor que hora de fim.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('validation.timeStartBeforeEnd'),
       });
       return;
     }
@@ -86,8 +94,8 @@ export class PeriodosPageComponent {
     this.facade.savePeriodo(this.editingId(), this.form.getRawValue());
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: this.editingId() ? 'Periodo atualizado.' : 'Periodo cadastrado.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate(this.editingId() ? 'periodos.toast.updated' : 'periodos.toast.created'),
     });
     this.cancelEdit();
   }
@@ -114,17 +122,17 @@ export class PeriodosPageComponent {
 
   protected remove(id: string): void {
     this.confirmationService.confirm({
-      header: 'Confirmar remocao',
-      message: 'Deseja remover este periodo?',
-      acceptLabel: 'Remover',
-      rejectLabel: 'Cancelar',
+      header: this.transloco.translate('common.confirmRemoveTitle'),
+      message: this.transloco.translate('periodos.confirm.message'),
+      acceptLabel: this.transloco.translate('common.remove'),
+      rejectLabel: this.transloco.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.facade.deletePeriodo(id);
         this.messageService.add({
           severity: 'success',
-          summary: 'Sucesso',
-          detail: 'Periodo removido.',
+          summary: this.transloco.translate('common.success'),
+          detail: this.transloco.translate('periodos.toast.removed'),
         });
       },
     });

@@ -248,14 +248,26 @@
   ],
   "configuracoesEscola": [
     {
-      "id": "cfg-1",
       "nomeEscola": "Escola Exemplo",
       "periodizacaoNotas": "bimestral",
       "mediaAprovacao": 6,
       "notaMaxima": 10,
       "usaRecuperacao": true,
       "permiteLancamentoManual": true,
-      "mostrarRankingTurma": false
+      "mostrarRankingTurma": false,
+      "id": "cfg-1"
+    }
+  ],
+  "responsaveis": [
+    {
+      "id": "resp-1",
+      "nome": "Responsável — Aluno 1 e 2",
+      "email": "resp1@escola.com",
+      "telefone": "",
+      "alunosIds": [
+        "MYF1qtnT9E0",
+        "dK5At1b4Mu4"
+      ]
     }
   ],
   "usuarios": [
@@ -282,6 +294,53 @@
       "senha": "prof123",
       "role": "professor",
       "professorId": "RbSHWZ1cL5A"
+    },
+    {
+      "id": "usr-aluno-1",
+      "nome": "Aluno 1",
+      "email": "aluno1@escola.com",
+      "senha": "aluno123",
+      "role": "aluno",
+      "professorId": null,
+      "alunoId": "MYF1qtnT9E0"
+    },
+    {
+      "id": "usr-resp-1",
+      "nome": "Responsável — Aluno 1",
+      "email": "resp1@escola.com",
+      "senha": "resp123",
+      "role": "responsavel",
+      "professorId": null,
+      "alunoId": null,
+      "responsavelId": "resp-1"
+    }
+  ],
+  "intervencoes": [
+    {
+      "id": "int-1",
+      "alunoId": "MYF1qtnT9E0",
+      "turmaId": "UM7soHOIOpg",
+      "materiaId": "XuD9oIFjrcQ",
+      "bimestre": "1o bimestre",
+      "risco": "medio",
+      "status": "em_andamento",
+      "objetivo": "Elevar desempenho em interpretação de texto",
+      "descricao": "Plano semanal com leitura guiada e revisão com feedback individual.",
+      "responsavel": "Professor 1",
+      "prazo": "2026-06-15"
+    }
+  ],
+  "recuperacoesAcademicas": [
+    {
+      "id": "rec-1",
+      "alunoId": "MYF1qtnT9E0",
+      "turmaId": "UM7soHOIOpg",
+      "materiaId": "XuD9oIFjrcQ",
+      "bimestre": "1o bimestre",
+      "notaAtual": 5.2,
+      "notaAlvo": 6,
+      "notaNecessaria": 0.8,
+      "status": "pendente"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

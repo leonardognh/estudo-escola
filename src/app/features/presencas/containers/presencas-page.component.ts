@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { startWith } from 'rxjs';
+import { map, startWith } from 'rxjs';
 import { TabsModule } from 'primeng/tabs';
 import { CardModule } from 'primeng/card';
 import { ButtonModule } from 'primeng/button';
@@ -9,6 +9,7 @@ import { SelectModule } from 'primeng/select';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TableModule } from 'primeng/table';
 import { MessageService } from 'primeng/api';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { PresencasFacade } from '@presencas/facades/presencas.facade';
 import { STATUS_PRESENCA_OPTIONS, StatusPresenca } from '@presencas/models/presenca.model';
@@ -26,6 +27,7 @@ import { PageHeaderComponent } from '@shared/components/page-header/page-header.
     SelectModule,
     DatePickerModule,
     TableModule,
+    TranslocoPipe,
     PageHeaderComponent,
   ],
   providers: [PresencasFacade],
@@ -35,9 +37,22 @@ import { PageHeaderComponent } from '@shared/components/page-header/page-header.
 export class PresencasPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(PresencasFacade);
-  protected readonly statusOptions = [...STATUS_PRESENCA_OPTIONS];
   protected readonly draft = signal<Record<string, StatusPresenca>>({});
+
+  private readonly langTick = toSignal(
+    this.transloco.langChanges$.pipe(map(() => this.transloco.getActiveLang())),
+    { initialValue: this.transloco.getActiveLang() },
+  );
+
+  protected readonly statusOptions = computed(() => {
+    this.langTick();
+    return STATUS_PRESENCA_OPTIONS.map((o) => ({
+      value: o.value,
+      label: this.transloco.translate(`status.${o.value}`),
+    }));
+  });
 
   protected readonly filtroForm = this.formBuilder.nonNullable.group({
     turmaId: ['', [Validators.required]],
@@ -56,6 +71,27 @@ export class PresencasPageComponent {
   protected readonly horariosDia = computed(() =>
     this.facade.getHorariosByTurmaAndDate(this.turmaIdSignal(), this.dataSignal() ?? new Date()),
   );
+
+  protected readonly lancamentoCards = computed(() => {
+    const turmaId = this.turmaIdSignal();
+    const date = this.dataSignal();
+    const horarios = this.horariosDia();
+    const alunos = this.facade.getAlunosByTurma(turmaId);
+    if (!turmaId || !date || !horarios.length || !alunos.length) {
+      return [];
+    }
+    const dateStr = this.toDateString(date);
+    const draft = this.draft();
+    return horarios.map((h) => ({
+      horario: h,
+      titulo: `${this.facade.getMateriaNameByHorario(h.id)} - ${h.horaInicio}-${h.horaFim}`,
+      alunos: alunos.map((a) => ({
+        id: a.id,
+        nome: a.nome,
+        status: (draft[this.key(a.id, h.id, dateStr)] ?? 'presente') as StatusPresenca,
+      })),
+    }));
+  });
   protected readonly calendarWeekStart = signal(this.getMonday(new Date()));
   protected readonly weekDays = computed(() => {
     const start = this.calendarWeekStart();
@@ -65,7 +101,29 @@ export class PresencasPageComponent {
       return d;
     });
   });
+  protected readonly weekLabelText = computed(() => {
+    this.langTick();
+    const days = this.weekDays();
+    if (!days.length) {
+      return '';
+    }
+    const start = days[0];
+    const end = days[6];
+    const loc = this.localeTag();
+    return `${start.toLocaleDateString(loc)} - ${end.toLocaleDateString(loc)}`;
+  });
+
+  protected readonly weekDayHeaders = computed(() => {
+    this.langTick();
+    const loc = this.localeTag();
+    return this.weekDays().map((date) => ({
+      date,
+      label: date.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: '2-digit' }),
+    }));
+  });
+
   protected readonly calendarRows = computed(() => {
+    this.langTick();
     const turmaId = this.turmaIdSignal();
     const alunos = this.facade.getAlunosByTurma(turmaId);
     const rows: {
@@ -84,8 +142,12 @@ export class PresencasPageComponent {
         const ausentes = statuses.filter((s) => s === 'ausente').length;
         const justificados = statuses.filter((s) => s === 'justificado').length;
         const resumo = statuses.length
-          ? `P:${presentes} A:${ausentes} J:${justificados}`
-          : 'Sem aula';
+          ? this.transloco.translate('presencas.calendar.summary', {
+              p: String(presentes),
+              a: String(ausentes),
+              j: String(justificados),
+            })
+          : this.transloco.translate('presencas.calendar.noLesson');
         return { date, resumo };
       });
       rows.push({ alunoNome: aluno.nome, days });
@@ -98,7 +160,11 @@ export class PresencasPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
     effect(() => {
@@ -114,8 +180,8 @@ export class PresencasPageComponent {
       const next: Record<string, StatusPresenca> = {};
       for (const aluno of alunos) {
         for (const horario of horarios) {
-          const key = this.key(aluno.id, horario.id, dateStr);
-          next[key] = this.facade.getPresenca(aluno.id, horario.id, dateStr)?.status ?? 'presente';
+          const k = this.key(aluno.id, horario.id, dateStr);
+          next[k] = this.facade.getPresenca(aluno.id, horario.id, dateStr)?.status ?? 'presente';
         }
       }
       this.draft.set(next);
@@ -128,8 +194,8 @@ export class PresencasPageComponent {
       return;
     }
     const dateStr = this.toDateString(date);
-    const key = this.key(alunoId, horarioId, dateStr);
-    this.draft.set({ ...this.draft(), [key]: status });
+    const k = this.key(alunoId, horarioId, dateStr);
+    this.draft.set({ ...this.draft(), [k]: status });
   }
 
   protected getStatus(alunoId: string, horarioId: string): StatusPresenca {
@@ -146,8 +212,8 @@ export class PresencasPageComponent {
       this.filtroForm.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Selecione turma e data para lancar presenca.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('presencas.validation.select'),
       });
       return;
     }
@@ -170,8 +236,8 @@ export class PresencasPageComponent {
     this.facade.savePresencasLote(payloads);
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Presencas lancadas com sucesso.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate('presencas.toast.saved'),
     });
   }
 
@@ -187,14 +253,8 @@ export class PresencasPageComponent {
     this.calendarWeekStart.set(d);
   }
 
-  protected weekLabel(): string {
-    const start = this.weekDays()[0];
-    const end = this.weekDays()[6];
-    return `${start.toLocaleDateString('pt-BR')} - ${end.toLocaleDateString('pt-BR')}`;
-  }
-
-  protected dayLabel(date: Date): string {
-    return date.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  private localeTag(): string {
+    return this.transloco.getActiveLang()?.toLowerCase().startsWith('en') ? 'en-US' : 'pt-BR';
   }
 
   private key(alunoId: string, horarioId: string, date: string): string {

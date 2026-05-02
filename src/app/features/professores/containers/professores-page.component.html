@@ -1,13 +1,17 @@
 <section class="space-y-4">
   <p-confirmdialog />
-  <app-page-header [title]="labels.title" actionLabel="Novo professor" (action)="openCreateModal()" />
+  <app-page-header
+    titleKey="professores.pageTitle"
+    actionLabelKey="professores.newAction"
+    (action)="openCreateModal()"
+  />
 
   @if (facade.loading()) {
-    <p class="text-sm text-muted-color">Carregando...</p>
+    <p class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</p>
   } @else {
     <p-table
       #dtProf
-      [value]="facade.professores()"
+      [value]="facade.professoresTableRows()"
       [paginator]="true"
       [rows]="8"
       [globalFilterFields]="['nome', 'email']"
@@ -15,41 +19,47 @@
     >
       <ng-template pTemplate="caption">
         <app-table-search
-          placeholder="Pesquisar professor"
+          placeholderKey="professores.searchPlaceholder"
           (searchChange)="dtProf.filterGlobal($event, 'contains')"
         />
       </ng-template>
       <ng-template pTemplate="header">
         <tr>
-          <th>Nome</th>
-          <th>Email</th>
-          <th>Materia principal</th>
-          <th>Outras materias</th>
-          <th class="w-36">Acoes</th>
+          <th>{{ 'professores.field.nome' | transloco }}</th>
+          <th>{{ 'professores.field.email' | transloco }}</th>
+          <th>{{ 'professores.col.principal' | transloco }}</th>
+          <th>{{ 'professores.col.other' | transloco }}</th>
+          <th class="w-24 sm:w-32">{{ 'alunos.col.actions' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-professor>
         <tr>
           <td>{{ professor.nome }}</td>
           <td>{{ professor.email }}</td>
-          <td>{{ facade.getMateriaNomeById(professor.materiaPrincipalId) }}</td>
+          <td>{{ professor.materiaPrincipalNome }}</td>
+          <td>{{ professor.outrasMateriasNomes || ('professores.noneSubjects' | transloco) }}</td>
           <td>
-            @if (professor.outrasMateriasIds.length) {
-              @for (materiaId of professor.outrasMateriasIds; track materiaId; let last = $last) {
-                {{ facade.getMateriaNomeById(materiaId) }}@if (!last) {, }
-              }
-            } @else {
-              Nenhuma
-            }
-          </td>
-          <td>
-            <div class="flex gap-2">
-              <button pButton type="button" severity="secondary" (click)="startEdit(professor)">
-                {{ labels.edit }}
-              </button>
-              <button pButton type="button" severity="danger" (click)="remove(professor.id)">
-                {{ labels.remove }}
-              </button>
+            <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                [pTooltip]="'common.edit' | transloco"
+                tooltipPosition="top"
+                (onClick)="startEdit(professor)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                size="small"
+                [pTooltip]="'common.remove' | transloco"
+                tooltipPosition="top"
+                (onClick)="remove(professor.id)"
+              />
             </div>
           </td>
         </tr>
@@ -62,29 +72,28 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '54rem', 'max-width': '95vw' }"
-    [contentStyle]="{ overflow: 'visible' }"
-    [header]="editingId() ? 'Editar professor' : 'Novo professor'"
+    [header]="(editingId() ? 'professores.dialog.edit' : 'professores.dialog.new') | transloco"
     (onHide)="cancelEdit()"
   >
-    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-2">
+    <form [formGroup]="form" (ngSubmit)="submit()" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
       <label class="flex flex-col gap-1 text-sm">
-        Nome
+        {{ 'professores.field.nome' | transloco }}
         <input pInputText type="text" formControlName="nome" />
         @if (form.controls.nome.touched && form.controls.nome.invalid) {
-          <small class="text-red-600">Nome deve ter ao menos 3 caracteres.</small>
+          <small class="text-red-600">{{ 'professores.validation.nome' | transloco }}</small>
         }
       </label>
 
       <label class="flex flex-col gap-1 text-sm">
-        Email
+        {{ 'professores.field.email' | transloco }}
         <input pInputText type="email" formControlName="email" />
         @if (form.controls.email.touched && form.controls.email.invalid) {
-          <small class="text-red-600">Informe um e-mail valido.</small>
+          <small class="text-red-600">{{ 'professores.validation.email' | transloco }}</small>
         }
       </label>
 
       <label class="flex flex-col gap-1 text-sm">
-        Materia principal
+        {{ 'professores.col.principal' | transloco }}
         <p-select
           formControlName="materiaPrincipalId"
           [options]="facade.materiaOptions()"
@@ -97,7 +106,7 @@
       </label>
 
       <label class="flex flex-col gap-1 text-sm">
-        Outras materias que pode lecionar
+        {{ 'professores.field.outrasMaterias' | transloco }}
         <p-multiSelect
           formControlName="outrasMateriasIds"
           [options]="getOutrasMateriasOptions(form.controls.materiaPrincipalId.value)"
@@ -105,18 +114,13 @@
           optionValue="value"
           [filter]="true"
           [fluid]="true"
-          defaultLabel="Selecione"
+          [placeholder]="'common.select' | transloco"
           appendTo="body"
         />
       </label>
 
-      <div class="md:col-span-2">
-        <app-form-actions
-          [loading]="facade.loading()"
-          [saveLabel]="labels.save"
-          [cancelLabel]="labels.cancel"
-          (cancel)="cancelEdit()"
-        />
+      <div class="sm:col-span-2">
+        <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
       </div>
     </form>
   </p-dialog>

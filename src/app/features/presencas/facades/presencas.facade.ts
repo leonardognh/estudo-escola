@@ -11,6 +11,7 @@ import { HorariosAulasService } from '@calendario/services/horarios-aulas.servic
 import { HorarioAula } from '@calendario/models/horario-aula.model';
 import { MateriasService } from '@materias/services/materias.service';
 import { Materia, MateriaPorAno } from '@materias/models/materia.model';
+import { RoleScopeService } from '@auth/services/role-scope.service';
 
 @Injectable()
 export class PresencasFacade {
@@ -19,6 +20,7 @@ export class PresencasFacade {
   private readonly alunosService = inject(AlunosService);
   private readonly horariosAulasService = inject(HorariosAulasService);
   private readonly materiasService = inject(MateriasService);
+  private readonly roleScopeService = inject(RoleScopeService);
 
   readonly presencas = signal<Presenca[]>([]);
   readonly turmas = signal<Turma[]>([]);
@@ -39,15 +41,23 @@ export class PresencasFacade {
     this.fetchAll()
       .pipe(
         tap(([presencas, turmas, alunos, horariosAulas, materias, materiasPorAno]) => {
-          this.presencas.set(presencas);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.horariosAulas.set(horariosAulas);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
+          const scoped = this.roleScopeService.applyScope({
+            presencas,
+            turmas,
+            alunos,
+            horariosAulas,
+            materias,
+            materiasPorAno,
+          });
+          this.presencas.set(scoped.presencas ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.horariosAulas.set(scoped.horariosAulas ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar dados de presenca.');
+          this.errorMessage.set('errors.presencas.load');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -75,15 +85,23 @@ export class PresencasFacade {
       .pipe(
         switchMap(() => this.fetchAll()),
         tap(([presencas, turmas, alunos, horariosAulas, materias, materiasPorAno]) => {
-          this.presencas.set(presencas);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.horariosAulas.set(horariosAulas);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
+          const scoped = this.roleScopeService.applyScope({
+            presencas,
+            turmas,
+            alunos,
+            horariosAulas,
+            materias,
+            materiasPorAno,
+          });
+          this.presencas.set(scoped.presencas ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.horariosAulas.set(scoped.horariosAulas ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar presencas.');
+          this.errorMessage.set('errors.presencas.save');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),

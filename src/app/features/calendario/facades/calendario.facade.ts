@@ -13,6 +13,7 @@ import { HorarioAula, HorarioAulaFormValue } from '@calendario/models/horario-au
 import { HorariosAulasService } from '@calendario/services/horarios-aulas.service';
 import { PeriodosService } from '@periodos/services/periodos.service';
 import { Periodo } from '@periodos/models/periodo.model';
+import { RoleScopeService } from '@auth/services/role-scope.service';
 
 @Injectable()
 export class CalendarioFacade {
@@ -22,6 +23,7 @@ export class CalendarioFacade {
   private readonly alunosService = inject(AlunosService);
   private readonly horariosAulasService = inject(HorariosAulasService);
   private readonly periodosService = inject(PeriodosService);
+  private readonly roleScopeService = inject(RoleScopeService);
 
   readonly turmas = signal<Turma[]>([]);
   readonly materias = signal<Materia[]>([]);
@@ -53,16 +55,24 @@ export class CalendarioFacade {
     ])
       .pipe(
         tap(([turmas, materias, materiasPorAno, professores, alunos, horariosAulas, periodos]) => {
-          this.turmas.set(turmas);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.professores.set(professores);
-          this.alunos.set(alunos);
-          this.horariosAulas.set(horariosAulas);
+          const scoped = this.roleScopeService.applyScope({
+            turmas,
+            materias,
+            materiasPorAno,
+            professores,
+            alunos,
+            horariosAulas,
+          });
+          this.turmas.set(scoped.turmas ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.professores.set(scoped.professores ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.horariosAulas.set(scoped.horariosAulas ?? []);
           this.periodos.set(periodos);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar dados do calendario.');
+          this.errorMessage.set('errors.calendario.load');
           return of([[], [], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -89,16 +99,24 @@ export class CalendarioFacade {
           ]),
         ),
         tap(([turmas, materias, materiasPorAno, professores, alunos, horariosAulas, periodos]) => {
-          this.turmas.set(turmas);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.professores.set(professores);
-          this.alunos.set(alunos);
-          this.horariosAulas.set(horariosAulas);
+          const scoped = this.roleScopeService.applyScope({
+            turmas,
+            materias,
+            materiasPorAno,
+            professores,
+            alunos,
+            horariosAulas,
+          });
+          this.turmas.set(scoped.turmas ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.professores.set(scoped.professores ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.horariosAulas.set(scoped.horariosAulas ?? []);
           this.periodos.set(periodos);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar horario de aula.');
+          this.errorMessage.set('errors.calendario.save');
           return of([[], [], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -126,16 +144,24 @@ export class CalendarioFacade {
           ]),
         ),
         tap(([turmas, materias, materiasPorAno, professores, alunos, horariosAulas, periodos]) => {
-          this.turmas.set(turmas);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.professores.set(professores);
-          this.alunos.set(alunos);
-          this.horariosAulas.set(horariosAulas);
+          const scoped = this.roleScopeService.applyScope({
+            turmas,
+            materias,
+            materiasPorAno,
+            professores,
+            alunos,
+            horariosAulas,
+          });
+          this.turmas.set(scoped.turmas ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.professores.set(scoped.professores ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.horariosAulas.set(scoped.horariosAulas ?? []);
           this.periodos.set(periodos);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover horario de aula.');
+          this.errorMessage.set('errors.calendario.remove');
           return of([[], [], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),

@@ -22,7 +22,7 @@ export class PeriodosFacade {
         take(1),
         tap((periodos) => this.periodos.set(periodos)),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar periodos.');
+          this.errorMessage.set('errors.periodos.load');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),
@@ -40,7 +40,7 @@ export class PeriodosFacade {
         switchMap(() => this.periodosService.list().pipe(take(1))),
         tap((periodos) => this.periodos.set(periodos)),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar periodo.');
+          this.errorMessage.set('errors.periodos.save');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),
@@ -59,7 +59,7 @@ export class PeriodosFacade {
         switchMap(() => this.periodosService.list().pipe(take(1))),
         tap((periodos) => this.periodos.set(periodos)),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover periodo.');
+          this.errorMessage.set('errors.periodos.remove');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),

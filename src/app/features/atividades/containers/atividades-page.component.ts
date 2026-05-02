@@ -3,6 +3,7 @@ import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angu
 import { toSignal } from '@angular/core/rxjs-interop';
 import { startWith } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip';
 import { CardModule } from 'primeng/card';
 import { DialogModule } from 'primeng/dialog';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
@@ -11,6 +12,7 @@ import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
 import { ConfirmationService, MessageService } from 'primeng/api';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { AtividadesFacade } from '@atividades/facades/atividades.facade';
 import { Atividade, TIPO_ATIVIDADE_OPTIONS } from '@atividades/models/atividade.model';
@@ -26,6 +28,7 @@ import { FormActionsComponent } from '@shared/components/form-actions/form-actio
     ReactiveFormsModule,
     FormsModule,
     ButtonModule,
+    TooltipModule,
     CardModule,
     DialogModule,
     ConfirmDialogModule,
@@ -33,6 +36,7 @@ import { FormActionsComponent } from '@shared/components/form-actions/form-actio
     SelectModule,
     InputTextModule,
     TableModule,
+    TranslocoPipe,
     PageHeaderComponent,
     TableSearchComponent,
     FormActionsComponent,
@@ -45,6 +49,7 @@ export class AtividadesPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly messageService = inject(MessageService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(AtividadesFacade);
   protected readonly modalVisible = signal(false);
   protected readonly calculoModalVisible = signal(false);
@@ -58,7 +63,9 @@ export class AtividadesPageComponent {
     turmaNome: string;
     materiaNome: string;
   } | null>(null);
-  protected readonly calculoItens = signal<{ id: string; nome: string; notaAtividade: number; peso: number }[]>([]);
+  protected readonly calculoItens = signal<
+    { id: string; nome: string; notaAtividade: number; peso: number; contribuicaoDisplay: string }[]
+  >([]);
   protected readonly notaFinalEditavel = signal(0);
   protected readonly tipoOptions = [...TIPO_ATIVIDADE_OPTIONS];
   protected readonly bimestreOptions = [...BIMESTRE_OPTIONS];
@@ -140,7 +147,11 @@ export class AtividadesPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
   }
@@ -155,16 +166,18 @@ export class AtividadesPageComponent {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha os campos obrigatorios corretamente.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('validation.fillFields'),
       });
       return;
     }
     this.facade.saveAtividade(this.editingId(), this.form.getRawValue());
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: this.editingId() ? 'Atividade atualizada.' : 'Atividade cadastrada.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate(
+        this.editingId() ? 'atividades.toast.updated' : 'atividades.toast.created',
+      ),
     });
     this.cancelEdit();
   }
@@ -203,14 +216,18 @@ export class AtividadesPageComponent {
 
   protected confirmRemove(id: string): void {
     this.confirmationService.confirm({
-      header: 'Confirmar remocao',
-      message: 'Deseja remover esta atividade?',
-      acceptLabel: 'Remover',
-      rejectLabel: 'Cancelar',
+      header: this.transloco.translate('common.confirmRemoveTitle'),
+      message: this.transloco.translate('atividades.confirm.message'),
+      acceptLabel: this.transloco.translate('common.remove'),
+      rejectLabel: this.transloco.translate('common.cancel'),
       acceptButtonStyleClass: 'p-button-danger',
       accept: () => {
         this.facade.removeAtividade(id);
-        this.messageService.add({ severity: 'success', summary: 'Sucesso', detail: 'Atividade removida.' });
+        this.messageService.add({
+          severity: 'success',
+          summary: this.transloco.translate('common.success'),
+          detail: this.transloco.translate('atividades.toast.removed'),
+        });
       },
     });
   }
@@ -234,7 +251,10 @@ export class AtividadesPageComponent {
       turmaNome: group.turmaNome,
       materiaNome: group.materiaNome,
     });
-    const itens = group.atividades.map((item) => ({ ...item }));
+    const itens = group.atividades.map((item) => ({
+      ...item,
+      contribuicaoDisplay: (Number(item.notaAtividade || 0) * Number(item.peso || 0)).toFixed(2),
+    }));
     this.calculoItens.set(itens);
     this.notaFinalEditavel.set(this.calcularMediaPonderada(itens));
     this.calculoModalVisible.set(true);
@@ -242,9 +262,15 @@ export class AtividadesPageComponent {
 
   protected atualizarItem(index: number, field: 'notaAtividade' | 'peso', value: number): void {
     const parsedValue = Number(value);
-    const next = this.calculoItens().map((item, itemIndex) =>
-      itemIndex === index ? { ...item, [field]: parsedValue } : item,
-    );
+    const next = this.calculoItens().map((item, itemIndex) => {
+      const updated = itemIndex === index ? { ...item, [field]: parsedValue } : item;
+      return {
+        ...updated,
+        contribuicaoDisplay: (
+          Number(updated.notaAtividade || 0) * Number(updated.peso || 0)
+        ).toFixed(2),
+      };
+    });
     this.calculoItens.set(next);
     this.notaFinalEditavel.set(this.calcularMediaPonderada(next));
   }
@@ -264,8 +290,8 @@ export class AtividadesPageComponent {
     );
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Nota gerada/atualizada a partir das atividades.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate('atividades.toast.notaGerada'),
     });
     this.calculoModalVisible.set(false);
     this.calculoContext.set(null);
@@ -283,10 +309,9 @@ export class AtividadesPageComponent {
     if (somaPesos <= 0) {
       return 0;
     }
-    const media = items.reduce(
-      (acc, item) => acc + Number(item.notaAtividade || 0) * Number(item.peso || 0),
-      0,
-    ) / somaPesos;
+    const media =
+      items.reduce((acc, item) => acc + Number(item.notaAtividade || 0) * Number(item.peso || 0), 0) /
+      somaPesos;
     return Number(media.toFixed(2));
   }
 }

@@ -21,7 +21,7 @@ export class AlunosFacade {
         take(1),
         tap((alunos) => this.alunos.set(alunos)),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar alunos.');
+          this.errorMessage.set('errors.alunos.load');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),
@@ -38,7 +38,7 @@ export class AlunosFacade {
         switchMap(() => this.alunosService.list().pipe(take(1))),
         tap((alunos) => this.alunos.set(alunos)),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar aluno.');
+          this.errorMessage.set('errors.alunos.save');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),
@@ -56,7 +56,7 @@ export class AlunosFacade {
         switchMap(() => this.alunosService.list().pipe(take(1))),
         tap((alunos) => this.alunos.set(alunos)),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover aluno.');
+          this.errorMessage.set('errors.alunos.remove');
           return of([]);
         }),
         finalize(() => this.loading.set(false)),

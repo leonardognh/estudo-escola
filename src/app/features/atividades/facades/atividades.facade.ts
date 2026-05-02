@@ -11,6 +11,7 @@ import { MateriasService } from '@materias/services/materias.service';
 import { Materia, MateriaPorAno } from '@materias/models/materia.model';
 import { NotasService } from '@notas/services/notas.service';
 import { Nota } from '@notas/models/nota.model';
+import { RoleScopeService } from '@auth/services/role-scope.service';
 
 @Injectable()
 export class AtividadesFacade {
@@ -19,6 +20,7 @@ export class AtividadesFacade {
   private readonly alunosService = inject(AlunosService);
   private readonly materiasService = inject(MateriasService);
   private readonly notasService = inject(NotasService);
+  private readonly roleScopeService = inject(RoleScopeService);
 
   readonly atividades = signal<Atividade[]>([]);
   readonly turmas = signal<Turma[]>([]);
@@ -47,15 +49,23 @@ export class AtividadesFacade {
     ])
       .pipe(
         tap(([atividades, turmas, alunos, materias, materiasPorAno, notas]) => {
-          this.atividades.set(atividades);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.notas.set(notas);
+          const scoped = this.roleScopeService.applyScope({
+            atividades,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+            notas,
+          });
+          this.atividades.set(scoped.atividades ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.notas.set(scoped.notas ?? []);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao carregar atividades.');
+          this.errorMessage.set('errors.atividades.load');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -71,15 +81,23 @@ export class AtividadesFacade {
         take(1),
         switchMap(() => this.fetchAll()),
         tap(([atividades, turmas, alunos, materias, materiasPorAno, notas]) => {
-          this.atividades.set(atividades);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.notas.set(notas);
+          const scoped = this.roleScopeService.applyScope({
+            atividades,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+            notas,
+          });
+          this.atividades.set(scoped.atividades ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.notas.set(scoped.notas ?? []);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao salvar atividade.');
+          this.errorMessage.set('errors.atividades.save');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -96,15 +114,23 @@ export class AtividadesFacade {
         take(1),
         switchMap(() => this.fetchAll()),
         tap(([atividades, turmas, alunos, materias, materiasPorAno, notas]) => {
-          this.atividades.set(atividades);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.notas.set(notas);
+          const scoped = this.roleScopeService.applyScope({
+            atividades,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+            notas,
+          });
+          this.atividades.set(scoped.atividades ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.notas.set(scoped.notas ?? []);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao remover atividade.');
+          this.errorMessage.set('errors.atividades.remove');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -126,7 +152,7 @@ export class AtividadesFacade {
 
     const somaPesos = relacionadas.reduce((acc, item) => acc + Number(item.peso || 0), 0);
     if (somaPesos <= 0) {
-      this.errorMessage.set('Peso total das atividades deve ser maior que zero.');
+      this.errorMessage.set('errors.atividades.pesoZero');
       return;
     }
     const mediaPonderada =
@@ -156,15 +182,23 @@ export class AtividadesFacade {
         take(1),
         switchMap(() => this.fetchAll()),
         tap(([atividades, turmas, alunos, materias, materiasPorAno, notas]) => {
-          this.atividades.set(atividades);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.notas.set(notas);
+          const scoped = this.roleScopeService.applyScope({
+            atividades,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+            notas,
+          });
+          this.atividades.set(scoped.atividades ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.notas.set(scoped.notas ?? []);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao gerar nota pela atividade.');
+          this.errorMessage.set('errors.atividades.gerarNota');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),
@@ -206,7 +240,7 @@ export class AtividadesFacade {
 
     const somaPesos = atividadesAtualizadas.reduce((acc, item) => acc + Number(item.peso || 0), 0);
     if (somaPesos <= 0) {
-      this.errorMessage.set('Peso total das atividades deve ser maior que zero.');
+      this.errorMessage.set('errors.atividades.pesoZero');
       return;
     }
 
@@ -259,15 +293,23 @@ export class AtividadesFacade {
         take(1),
         switchMap(() => this.fetchAll()),
         tap(([atividades, turmas, alunos, materias, materiasPorAno, notas]) => {
-          this.atividades.set(atividades);
-          this.turmas.set(turmas);
-          this.alunos.set(alunos);
-          this.materias.set(materias);
-          this.materiasPorAno.set(materiasPorAno);
-          this.notas.set(notas);
+          const scoped = this.roleScopeService.applyScope({
+            atividades,
+            turmas,
+            alunos,
+            materias,
+            materiasPorAno,
+            notas,
+          });
+          this.atividades.set(scoped.atividades ?? []);
+          this.turmas.set(scoped.turmas ?? []);
+          this.alunos.set(scoped.alunos ?? []);
+          this.materias.set(scoped.materias ?? []);
+          this.materiasPorAno.set(scoped.materiasPorAno);
+          this.notas.set(scoped.notas ?? []);
         }),
         catchError(() => {
-          this.errorMessage.set('Erro ao gerar nota pela atividade.');
+          this.errorMessage.set('errors.atividades.gerarNota');
           return of([[], [], [], [], [], []]);
         }),
         finalize(() => this.loading.set(false)),

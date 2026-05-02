@@ -1,46 +1,60 @@
 <section class="space-y-4">
   <p-confirmdialog />
-  <app-page-header [title]="labels.title" actionLabel="Nova turma" (action)="openCreateModal()" />
+  <app-page-header titleKey="turmas.pageTitle" actionLabelKey="turmas.newAction" (action)="openCreateModal()" />
 
   @if (facade.loading()) {
-    <p class="text-sm text-muted-color">Carregando...</p>
+    <p class="text-sm text-muted-color">{{ 'common.loading' | transloco }}</p>
   } @else {
     <p-table
       #dtTurmas
-      [value]="facade.turmas()"
+      [value]="facade.turmasTableRows()"
       [paginator]="true"
       [rows]="8"
       [globalFilterFields]="['ano', 'nome']"
       responsiveLayout="scroll"
     >
       <ng-template pTemplate="caption">
-        <app-table-search placeholder="Pesquisar turma" (searchChange)="dtTurmas.filterGlobal($event, 'contains')" />
+        <app-table-search placeholderKey="turmas.searchPlaceholder" (searchChange)="dtTurmas.filterGlobal($event, 'contains')" />
       </ng-template>
       <ng-template pTemplate="header">
         <tr>
-          <th>Ano</th>
-          <th>Turma</th>
-          <th>Periodo</th>
-          <th>Divisao das notas</th>
-          <th>Alunos</th>
-          <th class="w-36">Acoes</th>
+          <th>{{ 'turmas.col.year' | transloco }}</th>
+          <th>{{ 'turmas.col.className' | transloco }}</th>
+          <th>{{ 'turmas.col.period' | transloco }}</th>
+          <th>{{ 'turmas.col.grading' | transloco }}</th>
+          <th>{{ 'turmas.col.students' | transloco }}</th>
+          <th class="w-24 sm:w-32">{{ 'alunos.col.actions' | transloco }}</th>
         </tr>
       </ng-template>
       <ng-template pTemplate="body" let-turma>
         <tr>
           <td>{{ turma.ano }}</td>
           <td>{{ turma.nome }}</td>
-          <td>{{ facade.getPeriodoLabelById(turma.periodoId) }}</td>
-          <td>{{ turma.divisaoNotas || 'bimestral' }}</td>
-          <td>{{ facade.getAlunosNamesByIds(turma.alunosIds) || 'Nenhum aluno atribuido' }}</td>
+          <td>{{ turma.periodoLabel }}</td>
+          <td>{{ ('turmas.grading.' + (turma.divisaoNotas || 'bimestral')) | transloco }}</td>
+          <td>{{ turma.alunosNomesDisplay || ('turmas.noneStudents' | transloco) }}</td>
           <td>
-            <div class="flex gap-2">
-              <button pButton type="button" severity="secondary" (click)="startEdit(turma)">
-                {{ labels.edit }}
-              </button>
-              <button pButton type="button" severity="danger" (click)="remove(turma.id)">
-                {{ labels.remove }}
-              </button>
+            <div class="flex flex-wrap items-center gap-1 sm:gap-2">
+              <p-button
+                icon="pi pi-pencil"
+                [rounded]="true"
+                [text]="true"
+                severity="secondary"
+                size="small"
+                [pTooltip]="'common.edit' | transloco"
+                tooltipPosition="top"
+                (onClick)="startEdit(turma)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                [rounded]="true"
+                [text]="true"
+                severity="danger"
+                size="small"
+                [pTooltip]="'common.remove' | transloco"
+                tooltipPosition="top"
+                (onClick)="remove(turma.id)"
+              />
             </div>
           </td>
         </tr>
@@ -53,16 +67,19 @@
     [modal]="true"
     [closable]="true"
     [style]="{ width: '60rem', 'max-width': '95vw' }"
-    [contentStyle]="{ overflow: 'visible' }"
-    [header]="editingId() ? 'Editar turma' : 'Nova turma'"
+    [header]="(editingId() ? 'turmas.dialog.edit' : 'turmas.dialog.new') | transloco"
     (onHide)="cancelEdit()"
   >
-    <form [formGroup]="form" (ngSubmit)="submit()" class="grid gap-4 md:grid-cols-6">
-      <label class="flex flex-col gap-1 text-sm md:col-span-2">
-        Ano
+    <form
+      [formGroup]="form"
+      (ngSubmit)="submit()"
+      class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6"
+    >
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1 xl:col-span-2">
+        {{ 'turmas.field.year' | transloco }}
         <p-select
           formControlName="ano"
-          [options]="anoOptions"
+          [options]="anoOptionsDisplay()"
           optionLabel="label"
           optionValue="value"
           [fluid]="true"
@@ -70,16 +87,16 @@
         />
       </label>
 
-      <label class="flex flex-col gap-1 text-sm md:col-span-4">
-        Turma
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-2 xl:col-span-4">
+        {{ 'turmas.field.className' | transloco }}
         <input pInputText type="text" formControlName="nome" />
         @if (form.controls.nome.touched && form.controls.nome.invalid) {
-          <small class="text-red-600">Nome da turma e obrigatorio.</small>
+          <small class="text-red-600">{{ 'turmas.validation.nameRequired' | transloco }}</small>
         }
       </label>
 
-      <label class="flex flex-col gap-1 text-sm md:col-span-2">
-        Periodo
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1 xl:col-span-2">
+        {{ 'turmas.field.period' | transloco }}
         <p-select
           formControlName="periodoId"
           [options]="facade.periodosOptions()"
@@ -90,11 +107,11 @@
         />
       </label>
 
-      <label class="flex flex-col gap-1 text-sm md:col-span-2">
-        Divisao das notas
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-1 xl:col-span-2">
+        {{ 'turmas.field.grading' | transloco }}
         <p-select
           formControlName="divisaoNotas"
-          [options]="divisaoNotasOptions"
+          [options]="divisaoNotasOptionsDisplay()"
           optionLabel="label"
           optionValue="value"
           [fluid]="true"
@@ -102,28 +119,23 @@
         />
       </label>
 
-      <label class="flex flex-col gap-1 text-sm md:col-span-2">
-        Alunos da turma
+      <label class="flex flex-col gap-1 text-sm sm:col-span-2 lg:col-span-3 xl:col-span-2">
+        {{ 'turmas.field.students' | transloco }}
         <p-multiSelect
           formControlName="alunosIds"
           [options]="facade.alunosOptions()"
           optionLabel="label"
           optionValue="value"
           [filter]="true"
-          defaultLabel="Selecione os alunos"
+          [placeholder]="'turmas.placeholder.selectStudents' | transloco"
           [maxSelectedLabels]="2"
           [fluid]="true"
           appendTo="body"
         />
       </label>
 
-      <div class="md:col-span-6">
-        <app-form-actions
-          [loading]="facade.loading()"
-          [saveLabel]="labels.save"
-          [cancelLabel]="labels.cancel"
-          (cancel)="cancelEdit()"
-        />
+      <div class="sm:col-span-2 lg:col-span-3 xl:col-span-6">
+        <app-form-actions [loading]="facade.loading()" (cancel)="cancelEdit()" />
       </div>
     </form>
   </p-dialog>

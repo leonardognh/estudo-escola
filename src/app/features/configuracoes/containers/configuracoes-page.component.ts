@@ -1,5 +1,7 @@
-import { ChangeDetectionStrategy, Component, effect, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
@@ -8,8 +10,10 @@ import { MessageService } from 'primeng/api';
 
 import { ConfiguracoesFacade } from '@configuracoes/facades/configuracoes.facade';
 import { PERIODIZACAO_OPTIONS } from '@configuracoes/models/configuracao-escola.model';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { PageHeaderComponent } from '@shared/components/page-header/page-header.component';
 import { FormActionsComponent } from '@shared/components/form-actions/form-actions.component';
+import { LanguageSwitcherComponent } from '@shared/components/language-switcher/language-switcher.component';
 
 @Component({
   selector: 'app-configuracoes-page',
@@ -20,8 +24,10 @@ import { FormActionsComponent } from '@shared/components/form-actions/form-actio
     CardModule,
     SelectModule,
     InputTextModule,
+    TranslocoPipe,
     PageHeaderComponent,
     FormActionsComponent,
+    LanguageSwitcherComponent,
   ],
   providers: [ConfiguracoesFacade],
   templateUrl: './configuracoes-page.component.html',
@@ -30,12 +36,22 @@ import { FormActionsComponent } from '@shared/components/form-actions/form-actio
 export class ConfiguracoesPageComponent {
   private readonly formBuilder = inject(FormBuilder);
   private readonly messageService = inject(MessageService);
+  private readonly transloco = inject(TranslocoService);
   protected readonly facade = inject(ConfiguracoesFacade);
   protected readonly periodizacaoOptions = [...PERIODIZACAO_OPTIONS];
-  protected readonly simNaoOptions = [
-    { label: 'Sim', value: true },
-    { label: 'Nao', value: false },
-  ];
+
+  private readonly langTick = toSignal(
+    this.transloco.langChanges$.pipe(map(() => this.transloco.getActiveLang())),
+    { initialValue: this.transloco.getActiveLang() },
+  );
+
+  protected readonly simNaoOptions = computed(() => {
+    this.langTick();
+    return [
+      { label: this.transloco.translate('common.yes'), value: true },
+      { label: this.transloco.translate('common.no'), value: false },
+    ];
+  });
 
   protected readonly form = this.formBuilder.nonNullable.group({
     nomeEscola: ['', [Validators.required, Validators.minLength(2)]],
@@ -46,14 +62,6 @@ export class ConfiguracoesPageComponent {
     permiteLancamentoManual: [true, [Validators.required]],
     mostrarRankingTurma: [false, [Validators.required]],
   });
-
-  protected readonly suggestions = [
-    'Definir escala de nota e media de aprovacao para todos os modulos.',
-    'Escolher a periodizacao (bimestral, trimestral, semestral ou anual) para guiar filtros e boletim.',
-    'Configurar politica de recuperacao para apoiar calculo final e fluxo pedagogico.',
-    'Permitir ou bloquear lancamento manual de notas quando quiser usar somente geracao automatica por atividades.',
-    'Controlar exibicao de ranking para estrategias pedagógicas e transparencia por turma.',
-  ];
 
   constructor() {
     this.facade.loadConfiguracao();
@@ -74,7 +82,11 @@ export class ConfiguracoesPageComponent {
     effect(() => {
       const error = this.facade.errorMessage();
       if (error) {
-        this.messageService.add({ severity: 'error', summary: 'Erro', detail: error });
+        this.messageService.add({
+          severity: 'error',
+          summary: this.transloco.translate('common.error'),
+          detail: this.transloco.translate(error),
+        });
       }
     });
   }
@@ -84,16 +96,16 @@ export class ConfiguracoesPageComponent {
       this.form.markAllAsTouched();
       this.messageService.add({
         severity: 'warn',
-        summary: 'Validacao',
-        detail: 'Preencha os campos obrigatorios.',
+        summary: this.transloco.translate('common.validation'),
+        detail: this.transloco.translate('settings.toast.validation'),
       });
       return;
     }
     this.facade.saveConfiguracao(this.form.getRawValue());
     this.messageService.add({
       severity: 'success',
-      summary: 'Sucesso',
-      detail: 'Configuracoes da escola salvas.',
+      summary: this.transloco.translate('common.success'),
+      detail: this.transloco.translate('settings.toast.saved'),
     });
   }
 }

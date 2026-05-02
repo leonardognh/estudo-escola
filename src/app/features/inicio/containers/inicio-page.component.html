@@ -1,6 +1,8 @@
 <section class="space-y-4">
-  <h2 class="text-2xl font-semibold text-color">Guia rapido de uso</h2>
-  @if (isProfessor()) {
+  <h2 class="text-2xl font-semibold text-color">Guia rápido de uso</h2>
+  @if (isFamilia()) {
+    <app-inicio-familia-steps />
+  } @else if (isProfessor()) {
     <app-inicio-professor-steps />
   } @else {
     <app-inicio-admin-steps />
